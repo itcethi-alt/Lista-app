@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Lista.app"/>
+<meta name="description" content="Pasado de lista para profesores — Firebase"/>
+<title>Lista.app</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+<style>
+/* ══════════════════════════════════════════════════
+   VARIABLES & RESET
+══════════════════════════════════════════════════ */
+:root {
+  --bg:#080810; --sidebar:#0D0D1A; --card:#111122; --card-alt:#181830;
+  --border:rgba(255,255,255,0.06); --border-h:rgba(255,255,255,0.13);
+  --text:#EEEEF8; --muted:#5A5A7A; --sub:#8A8AB0;
+  --accent:#6EE7B7; --accent-bg:rgba(110,231,183,0.10);
+  --danger:#F87171; --danger-bg:rgba(248,113,113,0.10);
+  --warn:#FBBF24; --warn-bg:rgba(251,191,36,0.10);
+  --inp:#181830; --shadow:0 2px 20px rgba(0,0,0,.55);
+  --shadow-md:0 8px 40px rgba(0,0,0,.7); --overlay:rgba(0,0,0,.72);
+  --r:14px; --r-sm:10px;
+  --font-h:'Syne',sans-serif; --font-b:'DM Sans',sans-serif;
+  --sb-w:264px; --tb-h:58px;
+}
+[data-theme="light"] {
+  --bg:#F0F0F8; --sidebar:#fff; --card:#fff; --card-alt:#F6F6FC;
+  --border:rgba(0,0,0,.07); --border-h:rgba(0,0,0,.15);
+  --text:#0A0A1A; --muted:#8888AA; --sub:#55557A;
+  --accent:#059669; --accent-bg:rgba(5,150,105,.08);
+  --danger:#DC2626; --danger-bg:rgba(220,38,38,.08);
+  --warn:#D97706; --warn-bg:rgba(217,119,6,.08);
+  --inp:#EBEBF5; --shadow:0 2px 12px rgba(0,0,0,.07);
+  --shadow-md:0 8px 32px rgba(0,0,0,.12); --overlay:rgba(0,0,0,.42);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow-x:hidden}
+body{font-family:var(--font-b);background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-h);border-radius:99px}
+input,button,textarea{font-family:var(--font-b)}
+button{cursor:pointer;border:none;background:none}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fade-up{animation:fadeUp .3s ease both}
+.slide-in{animation:slideIn .25s ease both}
+.fade-in{animation:fadeIn .2s ease both}
+
+/* ══════════════════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════════════════ */
+#app{display:flex;min-height:100vh;flex-direction:column}
+#app-inner{display:flex;flex:1;min-height:0}
+
+#sidebar{
+  width:var(--sb-w);background:var(--sidebar);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;height:100vh;
+  position:fixed;top:0;left:0;z-index:200;
+  transition:transform .25s ease;
+}
+#sidebar-overlay{
+  display:none;position:fixed;inset:0;
+  background:var(--overlay);z-index:199;
+  backdrop-filter:blur(4px);animation:fadeIn .2s ease;
+}
+#main{flex:1;display:flex;flex-direction:column;min-width:0;margin-left:var(--sb-w);transition:margin-left .25s}
+#topbar{
+  display:none;position:sticky;top:0;z-index:100;
+  height:var(--tb-h);
+  background:color-mix(in srgb,var(--bg) 90%,transparent);
+  backdrop-filter:blur(20px);border-bottom:1px solid var(--border);
+  padding:0 16px;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+#page{flex:1;overflow-y:auto;padding:32px 40px 48px}
+#bottom-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;
+  height:68px;background:color-mix(in srgb,var(--card) 94%,transparent);
+  backdrop-filter:blur(20px);border-top:1px solid var(--border);
+  z-index:100;padding:8px 12px 12px;gap:4px;
+}
+
+@media(max-width:1199px){
+  #sidebar{transform:translateX(-100%)}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0}
+  #topbar{display:flex}
+  #page{padding:18px 14px 88px}
+  #bottom-nav{display:flex}
+}
+@media(max-width:767px){#page{padding:16px 12px 88px}}
+
+/* ══════════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════════ */
+.sb-hdr{padding:22px 18px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-logo{font-family:var(--font-h);font-weight:800;font-size:20px;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.sb-logo span{color:var(--accent)}
+.sb-user{display:flex;align-items:center;gap:10px}
+.sb-avatar{width:36px;height:36px;border-radius:99px;background:var(--accent-bg);border:2px solid color-mix(in srgb,var(--accent) 30%,transparent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--accent);flex-shrink:0}
+.sb-uname{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-uemail{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-body{flex:1;overflow-y:auto;padding:12px 10px}
+.sb-sect{padding:14px 10px 4px;font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--muted)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;font-size:14px;color:var(--sub);cursor:pointer;transition:all .15s;user-select:none}
+.nav-item:hover,.nav-item.active{background:var(--accent-bg);color:var(--accent)}
+.nav-item.active{font-weight:600}
+.nav-item.danger:hover{background:var(--danger-bg);color:var(--danger)}
+.course-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;font-size:13px;color:var(--sub);cursor:pointer;transition:all .15s}
+.course-item:hover,.course-item.active{background:var(--accent-bg);color:var(--accent)}
+.course-item.active{font-weight:600}
+.c-dot{width:8px;height:8px;border-radius:99px;flex-shrink:0}
+.c-nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-ct{font-size:11px;color:var(--muted)}
+.sb-add{width:100%;padding:10px;border-radius:10px;border:1px dashed var(--border);background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;transition:all .2s;margin-top:12px}
+.sb-add:hover{border-color:var(--accent);color:var(--accent)}
+.sb-ftr{padding:12px 10px;border-top:1px solid var(--border);flex-shrink:0}
+
+/* ══════════════════════════════════════════════════
+   BOTTOM NAV
+══════════════════════════════════════════════════ */
+.bn-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px 4px;border-radius:12px;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.06em;transition:all .2s}
+.bn-btn:hover,.bn-btn.active{background:var(--accent-bg);color:var(--accent)}
+
+/* ══════════════════════════════════════════════════
+   COMPONENTS
+══════════════════════════════════════════════════ */
+.ib{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--card-alt);color:var(--sub);display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.ib:hover{border-color:var(--border-h);color:var(--text)}
+.ib.accent{background:var(--accent-bg);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
+.ib.danger{background:var(--danger-bg);color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%,transparent)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-family:var(--font-h);font-weight:700;font-size:14px;letter-spacing:.01em;border-radius:12px;padding:13px 20px;transition:all .2s;cursor:pointer;border:none;text-align:center}
+.btn-p{background:var(--accent);color:#050510;box-shadow:0 4px 18px color-mix(in srgb,var(--accent) 40%,transparent)}
+.btn-p:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn-s{background:var(--card-alt);color:var(--sub);border:1px solid var(--border)}
+.btn-s:hover{border-color:var(--border-h);color:var(--text)}
+.btn-d{background:var(--danger-bg);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent)}
+.btn-d:hover{background:color-mix(in srgb,var(--danger) 20%,transparent)}
+.btn-sm{padding:8px 14px;font-size:13px;border-radius:10px}
+.btn-full{width:100%}
+.btn:disabled{opacity:.6;pointer-events:none}
+
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;transition:border-color .2s}
+.card-h:hover{border-color:var(--border-h)}
+.cp{padding:18px}
+
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;font-weight:500;color:var(--sub);margin-bottom:7px}
+.inp{width:100%;padding:11px 13px;border-radius:11px;border:1px solid var(--border);background:var(--inp);color:var(--text);font-size:14px;outline:none;transition:border-color .2s}
+.inp:focus{border-color:var(--accent)}
+.inp::placeholder{color:var(--muted)}
+input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);cursor:pointer}
+[data-theme=light] input[type=date]::-webkit-calendar-picker-indicator{filter:none;opacity:.5}
+
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.h1{font-family:var(--font-h);font-weight:800;font-size:clamp(22px,4vw,30px);color:var(--text);line-height:1.15}
+.h2{font-family:var(--font-h);font-weight:800;font-size:22px;color:var(--text)}
+.h3{font-family:var(--font-h);font-weight:700;font-size:15px;color:var(--text)}
+
+.view{display:none}
+.view.active{display:block}
+
+/* ══════════════════════════════════════════════════
+   HOME
+══════════════════════════════════════════════════ */
+.c-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:20px}
+@media(max-width:767px){.c-grid{grid-template-columns:1fr}}
+.c-bar{height:3px;background:var(--border);position:relative;overflow:hidden}
+.c-bar-fill{position:absolute;top:0;left:0;height:100%;border-radius:99px;transition:width .6s ease}
+.pct-b{font-family:var(--font-h);font-weight:800;font-size:13px;padding:3px 10px;border-radius:99px}
+
+/* ══════════════════════════════════════════════════
+   COURSE / ATTENDANCE
+══════════════════════════════════════════════════ */
+.c-layout{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
+@media(max-width:1199px){.c-layout{grid-template-columns:1fr}}
+.s-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(max-width:767px){.s-grid{grid-template-columns:repeat(2,1fr)}}
+.s-card{padding:14px 10px;text-align:center}
+.s-num{font-family:var(--font-h);font-weight:800;font-size:28px}
+.s-lbl{font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--muted);margin-top:3px}
+
+.att-row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);transition:background .12s}
+.att-row:last-child{border-bottom:none}
+.att-row:hover{background:var(--card-alt)}
+.att-av{width:34px;height:34px;border-radius:99px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
+.att-nm{flex:1;font-weight:500;font-size:14px}
+.att-bs{display:flex;gap:5px}
+.att-b{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-weight:700;font-size:11px;transition:all .15s;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.att-b:hover{transform:scale(1.08)}
+.att-b.p{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent);transform:scale(1.05)}
+.att-b.t{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn);transform:scale(1.05)}
+.att-b.a{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 18%,transparent);color:var(--danger);transform:scale(1.05)}
+.prog-bar{height:4px;background:var(--border);border-radius:99px;margin-top:5px;overflow:hidden}
+.prog-fill{height:100%;border-radius:99px;transition:width .4s}
+
+/* ══════════════════════════════════════════════════
+   HISTORY
+══════════════════════════════════════════════════ */
+.hist-row{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+.hist-row:last-child{border-bottom:none}
+.hist-row:hover{background:var(--card-alt)}
+.hist-pct{width:44px;height:44px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-weight:800;font-size:14px}
+.hist-bar{height:24px;width:72px;background:var(--border);border-radius:99px;overflow:hidden;flex-shrink:0}
+.hist-bar-fill{height:100%;border-radius:99px;transition:width .4s}
+
+/* ══════════════════════════════════════════════════
+   EDIT COURSE
+══════════════════════════════════════════════════ */
+.color-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.color-opt{width:28px;height:28px;border-radius:99px;cursor:pointer;border:3px solid transparent;transition:all .15s}
+.color-opt.sel{outline:2px solid var(--text);outline-offset:2px}
+.st-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border)}
+.st-row:last-child{border-bottom:none}
+.st-idx{font-size:12px;color:var(--muted);width:24px;text-align:right;flex-shrink:0}
+
+/* ══════════════════════════════════════════════════
+   PRINT
+══════════════════════════════════════════════════ */
+.pr-wrap{max-width:960px;margin:0 auto;padding:28px 20px 60px}
+.pr-card{background:#fff;color:#000;border-radius:16px;border:1px solid var(--border);overflow:hidden}
+.pr-hdr{padding:22px 28px;border-bottom:2px solid #111;background:#f9f9f9;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px}
+.pr-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.pr-tbl th,.pr-tbl td{border:1px solid #ddd;padding:7px 6px}
+.pr-tbl th{background:#f0f0f0;font-weight:700}
+.pr-tbl td{text-align:center}
+.pr-tbl .nm-col{text-align:left;padding:7px 12px;font-weight:500}
+.pr-tbl tr:nth-child(even) td{background:#fafafa}
+.pr-leg{padding:14px 28px;border-top:1px solid #eee;display:flex;gap:20px;font-size:11px;color:#666;flex-wrap:wrap}
+
+/* ══════════════════════════════════════════════════
+   AUTH
+══════════════════════════════════════════════════ */
+#auth-screen{display:none;min-height:100vh;background:var(--bg)}
+#auth-screen.on{display:flex}
+.auth-deco{flex:1;display:none;flex-direction:column;justify-content:center;padding:60px;background:var(--sidebar);border-right:1px solid var(--border)}
+@media(min-width:900px){.auth-deco{display:flex}}
+.auth-title{font-family:var(--font-h);font-weight:800;font-size:clamp(28px,3vw,40px);line-height:1.1;margin-bottom:20px}
+.auth-form-w{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px}
+.auth-logo{font-family:var(--font-h);font-weight:800;font-size:22px;margin-bottom:40px;display:flex;justify-content:space-between;align-items:center}
+.auth-h{font-family:var(--font-h);font-weight:800;font-size:28px;line-height:1.2;margin-bottom:8px}
+.auth-sub{color:var(--muted);font-size:14px;margin-bottom:28px}
+.auth-sw{text-align:center;color:var(--muted);font-size:13px;margin-top:8px}
+.auth-sw a{color:var(--accent);font-weight:600;cursor:pointer;text-decoration:none}
+.auth-err{color:var(--danger);font-size:13px;margin-bottom:12px;display:none}
+.auth-div{height:1px;background:var(--border);margin:22px 0}
+
+/* ══════════════════════════════════════════════════
+   LOADING / TOAST / MODAL
+══════════════════════════════════════════════════ */
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:16px}
+.spinner{width:36px;height:36px;border-radius:99px;border:3px solid var(--border);border-top-color:var(--accent);animation:spin .8s linear infinite}
+#loading-txt{font-family:var(--font-h);font-weight:800;font-size:20px;color:var(--accent)}
+#toast-w{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9000;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+@media(min-width:1200px){#toast-w{bottom:24px}}
+.toast{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 18px;font-size:13px;font-weight:500;color:var(--text);box-shadow:var(--shadow-md);animation:fadeUp .25s ease both;pointer-events:auto;white-space:nowrap}
+.toast.ok{border-color:color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)}
+.toast.err{border-color:color-mix(in srgb,var(--danger) 40%,transparent);color:var(--danger)}
+.modal-bd{position:fixed;inset:0;background:var(--overlay);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .18s ease}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px;width:100%;max-width:400px;box-shadow:var(--shadow-md);animation:fadeUp .2s ease}
+.modal h3{font-family:var(--font-h);font-weight:700;font-size:18px;margin-bottom:10px}
+.modal p{color:var(--sub);font-size:14px;margin-bottom:20px;line-height:1.6}
+.modal-btns{display:flex;gap:10px}
+
+/* page header util */
+.ph{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;gap:12px;flex-wrap:wrap}
+.ph-acts{display:flex;gap:8px;flex-wrap:wrap}
+.divider{height:1px;background:var(--border);margin:16px 0}
+
+@media print{
+  body *{visibility:hidden!important}
+  #print-zone,#print-zone *{visibility:visible!important}
+  #print-zone{position:fixed;left:0;top:0;width:100%;padding:24px;background:#fff}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div id="loading-txt">Lista<span style="opacity:.4">.</span>app</div>
+  <div class="spinner"></div>
+</div>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-deco">
+    <div style="font-family:var(--font-h);font-weight:800;font-size:20px;margin-bottom:48px">Lista<span style="color:var(--accent)">.</span>app</div>
+    <p class="auth-title">Gestiona la<br/><span style="color:var(--accent)">asistencia</span><br/>con precisión.</p>
+    <p style="color:var(--muted);font-size:15px;line-height:1.8;max-width:300px;margin-top:4px">Datos sincronizados en Firebase — accede desde cualquier dispositivo.</p>
+    <div style="margin-top:44px;display:flex;flex-direction:column;gap:12px">
+      <div style="font-size:14px;color:var(--sub)">☁️ &nbsp;Sincronización en tiempo real</div>
+      <div style="font-size:14px;color:var(--sub)">📱 &nbsp;Instalable como app nativa (PWA)</div>
+      <div style="font-size:14px;color:var(--sub)">🖨️ &nbsp;Imprime listas organizadas</div>
+      <div style="font-size:14px;color:var(--sub)">🌙 &nbsp;Modo oscuro y claro</div>
+    </div>
+    <!-- CRÉDITOS -->
+    <div style="margin-top:auto;padding-top:48px">
+      <div style="height:1px;background:var(--border);margin-bottom:20px"></div>
+      <div style="font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-weight:700;margin-bottom:10px">Desarrollado por</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:40px;height:40px;border-radius:99px;background:var(--accent-bg);border:2px solid color-mix(in srgb,var(--accent) 35%,transparent);display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-weight:800;font-size:14px;color:var(--accent);flex-shrink:0">JS</div>
+        <div>
+          <div style="font-family:var(--font-h);font-weight:700;font-size:15px;color:var(--text)">Ing. Janiel Sena</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Ingeniería de Software</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-size:11px;color:var(--muted)">© 2025 Lista.app · Todos los derechos reservados</div>
+    </div>
+  </div>
+  <div class="auth-form-w">
+    <div style="width:100%;max-width:380px" class="fade-up">
+      <div class="auth-logo">
+        Lista<span style="color:var(--accent)">.</span>app
+        <button class="ib" id="auth-theme-btn"></button>
+      </div>
+      <!-- Login -->
+      <div id="pnl-login">
+        <p class="auth-h">Bienvenido de vuelta</p>
+        <p class="auth-sub">Inicia sesión para continuar</p>
+        <div class="field"><label>Correo electrónico</label><input class="inp" id="l-email" type="email" placeholder="correo@escuela.edu" autocomplete="email"/></div>
+        <div class="field"><label>Contraseña</label><input class="inp" id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password"/></div>
+        <p class="auth-err" id="l-err"></p>
+        <button class="btn btn-p btn-full" id="l-btn">Iniciar sesión</button>
+        <div class="auth-div"></div>
+        <p class="auth-sw">¿No tienes cuenta? <a id="go-reg">Crear cuenta</a></p>
+      </div>
+      <!-- Register -->
+      <div id="pnl-reg" style="display:none">
+        <p class="auth-h">Crear cuenta</p>
+        <p class="auth-sub">Empieza a registrar asistencia</p>
+        <div class="field"><label>Nombre completo</label><input class="inp" id="r-name" placeholder="Prof. Ana García" autocomplete="name"/></div>
+        <div class="field"><label>Correo electrónico</label><input class="inp" id="r-email" type="email" placeholder="correo@escuela.edu" autocomplete="email"/></div>
+        <div class="field"><label>Contraseña</label><input class="inp" id="r-pass" type="password" placeholder="•••••••• (mín. 6 caracteres)" autocomplete="new-password"/></div>
+        <p class="auth-err" id="r-err"></p>
+        <button class="btn btn-p btn-full" id="r-btn">Crear cuenta</button>
+        <div class="auth-div"></div>
+        <p class="auth-sw">¿Ya tienes cuenta? <a id="go-login">Iniciar sesión</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+  <div id="app-inner">
+
+    <!-- SIDEBAR -->
+    <nav id="sidebar">
+      <div class="sb-hdr">
+        <div class="sb-logo">Lista<span>.</span>app
+          <div style="display:flex;gap:6px">
+            <button class="ib" id="theme-btn"></button>
+            <button class="ib" id="sb-close" style="display:none">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="sb-user">
+          <div class="sb-avatar" id="sb-av">PR</div>
+          <div style="min-width:0">
+            <div class="sb-uname" id="sb-name">—</div>
+            <div class="sb-uemail" id="sb-email">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="sb-body">
+        <div class="nav-item active" id="nav-home">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          Todos los cursos
+        </div>
+        <div class="sb-sect" id="sb-c-lbl" style="display:none">CURSOS</div>
+        <div id="sb-c-list"></div>
+        <button class="sb-add" id="sb-add-btn">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nuevo curso
+        </button>
+      </div>
+      <div class="sb-ftr">
+        <div class="nav-item danger" id="logout-btn">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Cerrar sesión
+        </div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+          <div style="font-size:9px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-weight:700;margin-bottom:8px">Desarrollado por</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:28px;height:28px;border-radius:99px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-weight:800;font-size:11px;color:var(--accent);flex-shrink:0">JS</div>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);font-family:var(--font-h)">Ing. Janiel Sena</div>
+              <div style="font-size:10px;color:var(--muted)">© 2025 Lista.app</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div id="sidebar-overlay"></div>
+
+    <!-- MAIN -->
+    <div id="main">
+      <div id="topbar">
+        <button class="ib" id="menu-btn">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div style="font-family:var(--font-h);font-weight:800;font-size:17px">Lista<span style="color:var(--accent)">.</span>app</div>
+        <button class="ib" id="tb-theme-btn"></button>
+      </div>
+
+      <div id="page">
+
+        <!-- HOME -->
+        <div id="view-home" class="view active fade-up">
+          <div class="ph">
+            <div>
+              <h1 class="h1">Mis Cursos</h1>
+              <p style="color:var(--muted);font-size:13px;margin-top:4px" id="home-sub">—</p>
+            </div>
+            <button class="btn btn-p btn-sm" id="home-add-btn">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nuevo curso
+            </button>
+          </div>
+          <div id="home-empty" style="display:none">
+            <div class="card cp" style="text-align:center;padding:60px 24px">
+              <div style="font-size:48px;margin-bottom:16px">📚</div>
+              <p style="color:var(--muted);margin-bottom:24px">No tienes cursos. ¡Crea el primero!</p>
+              <button class="btn btn-p" id="empty-add-btn">Agregar primer curso</button>
+            </div>
+          </div>
+          <div class="c-grid" id="c-grid"></div>
+        </div>
+
+        <!-- COURSE / ATTENDANCE -->
+        <div id="view-course" class="view fade-up">
+          <div class="ph">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+                <div id="ch-dot" style="width:10px;height:10px;border-radius:99px;flex-shrink:0"></div>
+                <h1 class="h1" id="ch-name" style="font-size:22px"></h1>
+              </div>
+              <p style="color:var(--muted);font-size:13px" id="ch-sub"></p>
+            </div>
+            <div class="ph-acts">
+              <button class="ib" id="btn-hist" title="Historial">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </button>
+              <button class="ib" id="btn-edit-c" title="Editar">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+              </button>
+              <button class="ib accent" id="btn-print" title="Imprimir">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="c-layout">
+            <div>
+              <div class="card cp" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;margin-bottom:12px">
+                <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:160px">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  <input type="date" id="att-date" class="inp" style="flex:1;border:none;background:transparent;padding:4px 6px;font-size:14px;font-weight:500"/>
+                </div>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-s btn-sm" id="mark-all-p">✓ Todos presentes</button>
+                  <button class="btn btn-d btn-sm" id="mark-all-a">✗ Todos ausentes</button>
+                </div>
+              </div>
+              <div class="card" id="att-list">
+                <div style="padding:40px;text-align:center;color:var(--muted)">Cargando...</div>
+              </div>
+            </div>
+            <div>
+              <div class="s-grid" id="s-grid" style="margin-bottom:12px">
+                <div class="card s-card"><div class="s-num" id="s-p" style="color:var(--accent)">0</div><div class="s-lbl">PRESENTES</div></div>
+                <div class="card s-card"><div class="s-num" id="s-t" style="color:var(--warn)">0</div><div class="s-lbl">TARDANZAS</div></div>
+                <div class="card s-card"><div class="s-num" id="s-a" style="color:var(--danger)">0</div><div class="s-lbl">AUSENTES</div></div>
+                <div class="card s-card"><div class="s-num" id="s-n" style="color:var(--muted)">0</div><div class="s-lbl">PENDIENTES</div></div>
+              </div>
+              <div class="card cp" id="prog-panel">
+                <p class="h3" style="margin-bottom:14px">Sesión actual</p>
+                <div id="prog-bars"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDIT COURSE -->
+        <div id="view-edit" class="view fade-up">
+          <div class="ph">
+            <div style="display:flex;align-items:center;gap:12px">
+              <button class="ib" id="back-edit">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <h2 class="h2" id="edit-title">Nuevo curso</h2>
+            </div>
+            <button class="btn btn-d btn-sm" id="btn-del-c" style="display:none">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
+              Eliminar
+            </button>
+          </div>
+          <div style="max-width:560px">
+            <div class="card cp" style="margin-bottom:16px">
+              <div class="field"><label>Nombre del curso *</label><input class="inp" id="e-name" placeholder="Ej: Matemáticas II"/></div>
+              <div class="field"><label>Código / Sección</label><input class="inp" id="e-code" placeholder="Ej: MAT-201-A"/></div>
+              <div class="field" style="margin-bottom:0">
+                <label>Color del curso</label>
+                <div class="color-grid" id="color-grid"></div>
+              </div>
+            </div>
+            <p class="h3" style="margin-bottom:10px;display:flex;align-items:center;gap:8px">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Alumnos (<span id="e-count">0</span>)
+            </p>
+            <div class="card" style="margin-bottom:16px">
+              <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px">
+                <input class="inp" id="new-st-inp" placeholder="Nombre del alumno" style="flex:1"/>
+                <button class="ib accent" id="add-st-btn" style="width:42px;height:42px">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+                </button>
+              </div>
+              <div id="sts-list">
+                <div style="padding:28px 16px;text-align:center;color:var(--muted);font-size:13px">Agrega alumnos al curso</div>
+              </div>
+            </div>
+            <p id="e-err" style="color:var(--danger);font-size:13px;margin-bottom:10px;display:none"></p>
+            <button class="btn btn-p btn-full" id="save-c-btn">Crear curso</button>
+          </div>
+        </div>
+
+        <!-- HISTORY -->
+        <div id="view-history" class="view fade-up">
+          <div class="ph">
+            <div style="display:flex;align-items:center;gap:12px">
+              <button class="ib" id="back-hist">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <h2 class="h2" id="hist-title">Historial</h2>
+            </div>
+          </div>
+          <div class="card" id="hist-list">
+            <div style="padding:40px;text-align:center;color:var(--muted)">Cargando...</div>
+          </div>
+        </div>
+
+        <!-- PRINT -->
+        <div id="view-print" class="view fade-up">
+          <div class="ph">
+            <div style="display:flex;align-items:center;gap:12px">
+              <button class="ib" id="back-print">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <h2 class="h2">Vista previa</h2>
+            </div>
+            <button class="btn btn-p btn-sm" onclick="window.print()">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              Imprimir
+            </button>
+          </div>
+          <div class="pr-wrap" id="print-zone">
+            <div class="pr-card">
+              <div class="pr-hdr">
+                <div>
+                  <div style="font-family:var(--font-h);font-weight:800;font-size:22px;color:#111">REGISTRO DE ASISTENCIA</div>
+                  <div id="pr-name" style="font-size:16px;font-weight:700;color:#333;margin-top:4px"></div>
+                  <div id="pr-code" style="color:#666;font-size:13px"></div>
+                </div>
+                <div style="text-align:right;font-size:12px;color:#888;line-height:1.8">
+                  <div>Total alumnos: <b id="pr-total"></b></div>
+                  <div>Sesiones: <b id="pr-sessions"></b></div>
+                  <div id="pr-date"></div>
+                </div>
+              </div>
+              <div style="overflow-x:auto;padding:16px" id="pr-tbl-w">
+                <p style="text-align:center;color:#999;padding:40px 0">Sin datos</p>
+              </div>
+              <div class="pr-leg">
+                <span style="font-weight:700">Leyenda:</span>
+                <span><b style="color:#059669">P</b> Presente</span>
+                <span><b style="color:#DC2626">A</b> Ausente</span>
+                <span><b style="color:#D97706">T</b> Tardanza</span>
+                <span><b style="color:#bbb">—</b> Sin registro</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /page -->
+
+      <div id="bottom-nav">
+        <button class="bn-btn active" id="bn-home">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          CURSOS
+        </button>
+        <button class="bn-btn" id="bn-att" style="display:none">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          LISTA
+        </button>
+        <button class="bn-btn" id="bn-hist" style="display:none">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          HISTORIAL
+        </button>
+      </div>
+    </div><!-- /main -->
+
+  </div><!-- /app-inner -->
+</div><!-- /app -->
+
+<div id="toast-w"></div>
+<div id="modal-bd" class="modal-bd" style="display:none">
+  <div class="modal">
+    <h3 id="modal-t">¿Confirmar?</h3>
+    <p id="modal-b">Esta acción no se puede deshacer.</p>
+    <div class="modal-btns">
+      <button class="btn btn-s" style="flex:1" id="modal-cancel">Cancelar</button>
+      <button class="btn btn-d" style="flex:1" id="modal-ok">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     APP — Firebase v12.10.0 ESM Module
+════════════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp }                           from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged,
+         signInWithEmailAndPassword,
+         createUserWithEmailAndPassword,
+         updateProfile, signOut }                  from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+import { getFirestore, collection, doc,
+         onSnapshot, setDoc, addDoc, deleteDoc,
+         getDocs, writeBatch }                     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+/* ── Firebase config ── */
+const firebaseConfig = {
+  apiKey:            "AIzaSyAiNW0-G3vo5ot_2R_7EZGdqWTJRzALf7c",
+  authDomain:        "listado-ce912.firebaseapp.com",
+  projectId:         "listado-ce912",
+  storageBucket:     "listado-ce912.firebasestorage.app",
+  messagingSenderId: "304443960599",
+  appId:             "1:304443960599:web:c775988a0d27249fb81b52"
+};
+
+const fbApp  = initializeApp(firebaseConfig);
+const fbAuth = getAuth(fbApp);
+const fbDb   = getFirestore(fbApp);
+
+/* ══════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════ */
+const PALETTE = ["#6EE7B7","#93C5FD","#FCA5A5","#FCD34D","#C4B5FD","#67E8F9","#F9A8D4","#86EFAC","#FDA4AF","#A5F3FC"];
+
+let currentUser = null;
+let courses  = [];
+let records  = {};
+let activeId = null;
+let editId   = null;
+let editSts  = [];
+let editClr  = PALETTE[0];
+let curView  = 'home';
+let dark     = localStorage.getItem('dark') !== 'false';
+
+let unsubCourses = null;
+let unsubRecords = null;
+
+/* ══════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════ */
+const $  = id => document.getElementById(id);
+const v  = id => $( id)?.value || '';
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const uid = () => Math.random().toString(36).slice(2,11);
+const todayStr = () => new Date().toISOString().split('T')[0];
+const fmtDate  = d => new Date(d+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+const fmtShort = d => new Date(d+'T12:00:00').toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'});
+const MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+const SUN  = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+
+function toast(msg, type='') {
+  const t = document.createElement('div');
+  t.className = 'toast '+ type; t.textContent = msg;
+  $('toast-w').appendChild(t);
+  setTimeout(()=>{ t.style.cssText='opacity:0;transition:opacity .3s'; setTimeout(()=>t.remove(),300); }, 2800);
+}
+function showErr(id, msg) { const e=$(id); if(e){e.textContent=msg;e.style.display='block';} }
+function hideErr(id) { const e=$(id); if(e) e.style.display='none'; }
+function setBtn(id, loading, def='') { const b=$(id); if(!b)return; b.disabled=loading; b.textContent=loading?'Cargando...':(def||b.textContent); }
+
+function confirm(title, body, cb) {
+  $('modal-t').textContent = title; $('modal-b').textContent = body;
+  $('modal-bd').style.display='flex';
+  $('modal-ok').onclick  = () => { $('modal-bd').style.display='none'; cb(); };
+  $('modal-cancel').onclick = () => { $('modal-bd').style.display='none'; };
+}
+
+function fbErr(e) {
+  const m={'auth/wrong-password':'Contraseña incorrecta','auth/invalid-credential':'Correo o contraseña incorrectos',
+    'auth/user-not-found':'No existe cuenta con ese correo','auth/email-already-in-use':'Ese correo ya está registrado',
+    'auth/weak-password':'Contraseña muy débil (mínimo 6 caracteres)','auth/invalid-email':'Correo no válido',
+    'auth/network-request-failed':'Error de red. Verifica tu conexión.'};
+  return m[e.code] || e.message;
+}
+
+/* ══════════════════════════════════════════════
+   THEME
+══════════════════════════════════════════════ */
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', dark?'dark':'light');
+  const ico = dark ? SUN : MOON;
+  ['theme-btn','tb-theme-btn','auth-theme-btn'].forEach(id => {
+    const b=$(id); if(!b) return;
+    b.innerHTML = `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${ico}</svg>`;
+  });
+  localStorage.setItem('dark', dark);
+}
+function toggleTheme() { dark=!dark; applyTheme(); }
+['theme-btn','tb-theme-btn','auth-theme-btn'].forEach(id => {
+  const b=$(id); if(b) b.addEventListener('click', toggleTheme);
+});
+applyTheme();
+
+/* ══════════════════════════════════════════════
+   AUTH
+══════════════════════════════════════════════ */
+onAuthStateChanged(fbAuth, user => {
+  $('loading').style.display='none';
+  if (user) {
+    currentUser = { uid:user.uid, name:user.displayName||user.email.split('@')[0], email:user.email };
+    bootApp();
+  } else {
+    $('auth-screen').classList.add('on');
+    $('app').style.display='none';
+  }
+});
+
+$('l-btn').addEventListener('click', async () => {
+  const email=v('l-email'), pass=v('l-pass');
+  if(!email||!pass){ showErr('l-err','Completa todos los campos'); return; }
+  hideErr('l-err'); setBtn('l-btn',true);
+  try {
+    await signInWithEmailAndPassword(fbAuth, email, pass);
+  } catch(e) { showErr('l-err', fbErr(e)); setBtn('l-btn',false,'Iniciar sesión'); }
+});
+
+$('r-btn').addEventListener('click', async () => {
+  const name=v('r-name'), email=v('r-email'), pass=v('r-pass');
+  if(!name||!email||!pass){ showErr('r-err','Completa todos los campos'); return; }
+  if(pass.length<6){ showErr('r-err','Contraseña mínimo 6 caracteres'); return; }
+  hideErr('r-err'); setBtn('r-btn',true);
+  try {
+    const cred = await createUserWithEmailAndPassword(fbAuth, email, pass);
+    await updateProfile(cred.user, { displayName: name });
+  } catch(e) { showErr('r-err', fbErr(e)); setBtn('r-btn',false,'Crear cuenta'); }
+});
+
+$('l-pass').addEventListener('keydown', e => { if(e.key==='Enter') $('l-btn').click(); });
+$('r-pass').addEventListener('keydown', e => { if(e.key==='Enter') $('r-btn').click(); });
+$('go-reg').addEventListener('click',   () => { $('pnl-login').style.display='none'; $('pnl-reg').style.display='block'; });
+$('go-login').addEventListener('click', () => { $('pnl-reg').style.display='none'; $('pnl-login').style.display='block'; });
+
+$('logout-btn').addEventListener('click', async () => {
+  unsubCourses?.(); unsubRecords?.();
+  await signOut(fbAuth);
+});
+
+/* ══════════════════════════════════════════════
+   BOOT APP
+══════════════════════════════════════════════ */
+function bootApp() {
+  $('auth-screen').classList.remove('on');
+  $('app').style.display = 'block';
+  updateUserUI();
+
+  const uid_ = currentUser.uid;
+
+  // Real-time listener — courses
+  unsubCourses = onSnapshot(
+    collection(fbDb,'users',uid_,'courses'),
+    snap => {
+      courses = snap.docs.map(d => ({id:d.id, ...d.data()}));
+      renderSidebar();
+      if(curView==='home') renderHome();
+      if(curView==='course') renderAtt();
+    },
+    () => toast('Error al cargar cursos','err')
+  );
+
+  // Real-time listener — records
+  unsubRecords = onSnapshot(
+    collection(fbDb,'users',uid_,'records'),
+    snap => {
+      records={};
+      snap.docs.forEach(d => { records[d.id]=d.data(); });
+      if(curView==='course')  renderAtt();
+      if(curView==='history') renderHist();
+    },
+    () => toast('Error al cargar registros','err')
+  );
+
+  showView('home');
+}
+
+function updateUserUI() {
+  if(!currentUser) return;
+  const ini = currentUser.name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+  $('sb-av').textContent   = ini;
+  $('sb-name').textContent = currentUser.name;
+  $('sb-email').textContent= currentUser.email;
+}
+
+/* ══════════════════════════════════════════════
+   VIEWS
+══════════════════════════════════════════════ */
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const el=$('view-'+name);
+  el.classList.add('active');
+  el.classList.remove('fade-up');
+  void el.offsetWidth;
+  el.classList.add('fade-up');
+  curView=name;
+  // Bottom nav
+  ['bn-home','bn-att','bn-hist'].forEach(id=>$( id)?.classList.remove('active'));
+  if(name==='home')    $('bn-home')?.classList.add('active');
+  if(name==='course')  $('bn-att')?.classList.add('active');
+  if(name==='history') $('bn-hist')?.classList.add('active');
+  document.querySelectorAll('#sidebar .nav-item').forEach(n=>n.classList.remove('active'));
+  if(name==='home') $('nav-home')?.classList.add('active');
+  closeSidebar();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ══════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════ */
+function renderSidebar() {
+  const lbl=$('sb-c-lbl'), list=$('sb-c-list');
+  lbl.style.display = courses.length ? 'block' : 'none';
+  list.innerHTML = courses.map(c=>`
+    <div class="course-item ${activeId===c.id&&curView==='course'?'active':''}" data-cid="${c.id}">
+      <div class="c-dot" style="background:${c.color};box-shadow:0 0 6px ${c.color}88"></div>
+      <span class="c-nm">${esc(c.name)}</span>
+      <span class="c-ct">${c.students?.length||0}</span>
+    </div>`).join('');
+  // Attach click listeners
+  list.querySelectorAll('.course-item').forEach(el=>{
+    el.addEventListener('click', ()=>selectCourse(el.dataset.cid));
+  });
+  updateUserUI();
+}
+
+$('menu-btn').addEventListener('click', () => {
+  $('sidebar').classList.add('open');
+  $('sidebar-overlay').style.display='block';
+  $('sb-close').style.display='flex';
+});
+function closeSidebar() {
+  $('sidebar').classList.remove('open');
+  $('sidebar-overlay').style.display='none';
+  $('sb-close').style.display='none';
+}
+$('sb-close').addEventListener('click', closeSidebar);
+$('sidebar-overlay').addEventListener('click', closeSidebar);
+$('nav-home').addEventListener('click', goHome);
+
+/* ══════════════════════════════════════════════
+   HOME
+══════════════════════════════════════════════ */
+function goHome() {
+  activeId=null;
+  $('bn-att').style.display='none';
+  $('bn-hist').style.display='none';
+  renderHome();
+  showView('home');
+}
+function renderHome() {
+  const today = new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+  $('home-sub').textContent = `${today} · ${courses.length} ${courses.length===1?'curso':'cursos'}`;
+  $('home-empty').style.display = courses.length?'none':'block';
+  const grid=$('c-grid');
+  grid.innerHTML = courses.map(c=>{
+    const s=calcStats(c.id);
+    const pc=s.pct>=80?'var(--accent)':s.pct>=50?'var(--warn)':'var(--danger)';
+    return `
+    <div class="card card-h" style="cursor:pointer" data-cid="${c.id}">
+      <div style="padding:18px 18px 14px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <div style="width:10px;height:10px;border-radius:99px;background:${c.color};box-shadow:0 0 8px ${c.color}88;margin-top:4px"></div>
+          ${s.sessions>0?`<span class="pct-b" style="color:${pc};background:${pc}20">${s.pct}%</span>`:''}
+        </div>
+        <div style="font-family:var(--font-h);font-weight:700;font-size:16px;margin-bottom:3px;line-height:1.3">${esc(c.name)}</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${esc(c.code)}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span class="pill" style="background:var(--accent-bg);color:var(--accent)">${c.students?.length||0} alumnos</span>
+          ${s.sessions>0?`<span class="pill" style="background:var(--border);color:var(--muted)">${s.sessions} sesiones</span>`:''}
+        </div>
+      </div>
+      ${s.sessions>0?`<div class="c-bar"><div class="c-bar-fill" style="width:${s.pct}%;background:${pc}"></div></div>`:''}
+    </div>`;
+  }).join('');
+  grid.querySelectorAll('[data-cid]').forEach(el=>{
+    el.addEventListener('click', ()=>selectCourse(el.dataset.cid));
+  });
+}
+
+$('home-add-btn').addEventListener('click',  ()=>showEditCourse(null));
+$('empty-add-btn').addEventListener('click', ()=>showEditCourse(null));
+$('sb-add-btn').addEventListener('click',    ()=>showEditCourse(null));
+$('bn-home').addEventListener('click', goHome);
+
+/* ══════════════════════════════════════════════
+   SELECT COURSE / ATTENDANCE
+══════════════════════════════════════════════ */
+function selectCourse(id) {
+  activeId = id;
+  $('att-date').value = todayStr();
+  $('bn-att').style.display='flex';
+  $('bn-hist').style.display='flex';
+  renderAtt();
+  showView('course');
+  renderSidebar();
+}
+const activeCourse = () => courses.find(c=>c.id===activeId);
+
+function renderAtt() {
+  const c=activeCourse(); if(!c) return;
+  const date=$('att-date').value||todayStr();
+  const att=records[`${c.id}__${date}`]||{};
+
+  $('ch-dot').style.cssText=`width:10px;height:10px;border-radius:99px;background:${c.color};box-shadow:0 0 8px ${c.color}88;flex-shrink:0`;
+  $('ch-name').textContent=c.name;
+  $('ch-sub').textContent=`${c.code} · ${c.students?.length||0} alumnos`;
+
+  const sts=c.students||[];
+  const P=sts.filter(s=>att[s.id]==='P').length;
+  const T=sts.filter(s=>att[s.id]==='T').length;
+  const A=sts.filter(s=>att[s.id]==='A').length;
+  const N=sts.length-P-T-A;
+  $('s-p').textContent=P; $('s-t').textContent=T; $('s-a').textContent=A; $('s-n').textContent=N;
+
+  $('prog-bars').innerHTML=[['Presentes',P,'var(--accent)'],['Tardanzas',T,'var(--warn)'],['Ausentes',A,'var(--danger)']].map(([lbl,val,clr])=>{
+    const pct=sts.length?Math.round(val/sts.length*100):0;
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:12px;color:var(--sub)">${lbl}</span>
+        <span style="font-size:12px;font-weight:600;color:${clr}">${pct}%</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${clr}"></div></div>
+    </div>`;
+  }).join('');
+
+  if(!sts.length){
+    $('att-list').innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)">Sin alumnos en este curso. <span style="color:var(--accent);cursor:pointer" id="edit-link">Agregar alumnos</span></div>';
+    $('edit-link')?.addEventListener('click',()=>showEditCourse(activeId));
+    return;
+  }
+  $('att-list').innerHTML=sts.map(s=>{
+    const st=att[s.id]||null;
+    const ini=s.name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+    return `<div class="att-row">
+      <div class="att-av" style="background:${c.color}22;color:${c.color}">${ini}</div>
+      <div class="att-nm">${esc(s.name)}</div>
+      <div class="att-bs">
+        <button class="att-b ${st==='P'?'p':''}" data-sid="${s.id}" data-st="P">P</button>
+        <button class="att-b ${st==='T'?'t':''}" data-sid="${s.id}" data-st="T">T</button>
+        <button class="att-b ${st==='A'?'a':''}" data-sid="${s.id}" data-st="A">A</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  $('att-list').querySelectorAll('.att-b').forEach(btn=>{
+    btn.addEventListener('click', ()=>toggleAtt(btn.dataset.sid, btn.dataset.st));
+  });
+}
+
+async function toggleAtt(sid, status) {
+  const c=activeCourse(); if(!c) return;
+  const date=$('att-date').value||todayStr();
+  const key=`${c.id}__${date}`;
+  const cur=(records[key]||{})[sid];
+  const ns=cur===status?null:status;
+  if(!records[key]) records[key]={};
+  if(ns) records[key][sid]=ns; else delete records[key][sid];
+  renderAtt();
+  try {
+    await setDoc(doc(fbDb,'users',currentUser.uid,'records',key), records[key]);
+  } catch { toast('Error al guardar','err'); }
+}
+
+async function markAll(status) {
+  const c=activeCourse(); if(!c) return;
+  const date=$('att-date').value||todayStr();
+  const key=`${c.id}__${date}`;
+  const rec={}; c.students.forEach(s=>rec[s.id]=status);
+  records[key]=rec;
+  renderAtt();
+  try { await setDoc(doc(fbDb,'users',currentUser.uid,'records',key),rec); }
+  catch { toast('Error al guardar','err'); }
+}
+
+$('att-date').addEventListener('change', renderAtt);
+$('mark-all-p').addEventListener('click', ()=>markAll('P'));
+$('mark-all-a').addEventListener('click', ()=>markAll('A'));
+$('btn-hist').addEventListener('click',   showHistory);
+$('btn-edit-c').addEventListener('click', ()=>showEditCourse(activeId));
+$('btn-print').addEventListener('click',  showPrint);
+$('bn-att').addEventListener('click',  ()=>showView('course'));
+$('bn-hist').addEventListener('click', showHistory);
+
+/* ══════════════════════════════════════════════
+   EDIT COURSE
+══════════════════════════════════════════════ */
+function showEditCourse(id) {
+  editId = id;
+  const c = id ? courses.find(x=>x.id===id) : null;
+  editSts = c ? c.students.map(s=>({...s})) : [];
+  editClr = c?.color || PALETTE[0];
+
+  $('edit-title').textContent  = c ? 'Editar curso' : 'Nuevo curso';
+  $('save-c-btn').textContent  = c ? 'Guardar cambios' : 'Crear curso';
+  $('btn-del-c').style.display = c ? 'inline-flex' : 'none';
+  $('e-name').value = c?.name||''; $('e-code').value = c?.code||'';
+  hideErr('e-err');
+
+  $('color-grid').innerHTML = PALETTE.map(clr=>`
+    <div class="color-opt ${clr===editClr?'sel':''}" style="background:${clr};box-shadow:0 0 8px ${clr}66" data-clr="${clr}"></div>`
+  ).join('');
+  $('color-grid').querySelectorAll('.color-opt').forEach(el=>{
+    el.addEventListener('click',()=>{
+      editClr=el.dataset.clr;
+      document.querySelectorAll('.color-opt').forEach(o=>o.classList.toggle('sel',o.dataset.clr===editClr));
+    });
+  });
+
+  renderStsEdit();
+  showView('edit');
+}
+function renderStsEdit() {
+  $('e-count').textContent = editSts.length;
+  if(!editSts.length){
+    $('sts-list').innerHTML='<div style="padding:28px 16px;text-align:center;color:var(--muted);font-size:13px">Agrega alumnos al curso</div>';
+    return;
+  }
+  $('sts-list').innerHTML = editSts.map((s,i)=>`
+    <div class="st-row">
+      <span class="st-idx">${i+1}</span>
+      <span style="flex:1;font-weight:500;font-size:14px">${esc(s.name)}</span>
+      <button class="ib danger" style="width:32px;height:32px" data-sid="${s.id}">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
+    </div>`).join('');
+  $('sts-list').querySelectorAll('[data-sid]').forEach(btn=>{
+    btn.addEventListener('click',()=>{ editSts=editSts.filter(s=>s.id!==btn.dataset.sid); renderStsEdit(); });
+  });
+}
+function addSt() {
+  const inp=$('new-st-inp'), name=inp.value.trim();
+  if(!name) return;
+  editSts.push({id:uid(),name});
+  inp.value=''; renderStsEdit(); inp.focus();
+}
+$('add-st-btn').addEventListener('click', addSt);
+$('new-st-inp').addEventListener('keydown', e=>{ if(e.key==='Enter') addSt(); });
+
+$('save-c-btn').addEventListener('click', async ()=>{
+  const name=$('e-name').value.trim(), code=$('e-code').value.trim();
+  if(!name){ showErr('e-err','El nombre del curso es requerido'); return; }
+  hideErr('e-err'); setBtn('save-c-btn',true);
+  const data={name,code,color:editClr,students:editSts};
+  try {
+    if(editId){
+      await setDoc(doc(fbDb,'users',currentUser.uid,'courses',editId),data);
+      toast('Curso actualizado','ok');
+    } else {
+      const ref=await addDoc(collection(fbDb,'users',currentUser.uid,'courses'),data);
+      editId=ref.id;
+      toast('Curso creado','ok');
+    }
+    activeId=editId;
+    selectCourse(editId);
+  } catch(e){ toast('Error: '+e.message,'err'); }
+  setBtn('save-c-btn',false,'Guardar cambios');
+});
+
+$('btn-del-c').addEventListener('click', ()=>{
+  confirm('¿Eliminar curso?','Se eliminará el curso y todo su historial de asistencia. Esta acción es irreversible.', async ()=>{
+    try {
+      await deleteDoc(doc(fbDb,'users',currentUser.uid,'courses',editId));
+      const rSnap = await getDocs(collection(fbDb,'users',currentUser.uid,'records'));
+      const batch = writeBatch(fbDb);
+      rSnap.docs.filter(d=>d.id.startsWith(editId+'__')).forEach(d=>batch.delete(d.ref));
+      await batch.commit();
+      toast('Curso eliminado','ok'); goHome();
+    } catch(e){ toast('Error al eliminar','err'); }
+  });
+});
+
+$('back-edit').addEventListener('click', ()=>{ if(activeId) showView('course'); else goHome(); });
+
+/* ══════════════════════════════════════════════
+   HISTORY
+══════════════════════════════════════════════ */
+function showHistory() {
+  const c=activeCourse(); if(!c) return;
+  $('hist-title').textContent=`Historial — ${c.name}`;
+  renderHist(); showView('history');
+}
+function renderHist() {
+  const c=activeCourse(); if(!c) return;
+  const sess=Object.entries(records).filter(([k])=>k.startsWith(c.id+'__'))
+    .map(([k,r])=>({date:k.split('__')[1],present:Object.values(r).filter(v=>v==='P').length,total:c.students.length}))
+    .sort((a,b)=>b.date.localeCompare(a.date));
+  if(!sess.length){
+    $('hist-list').innerHTML='<div style="padding:60px 24px;text-align:center"><div style="font-size:40px;margin-bottom:12px">📅</div><p style="color:var(--muted)">No hay sesiones registradas</p></div>';
+    return;
+  }
+  $('hist-list').innerHTML=sess.map((s,i)=>{
+    const pct=s.total?Math.round(s.present/s.total*100):0;
+    const cl=pct>=80?'var(--accent)':pct>=50?'var(--warn)':'var(--danger)';
+    return `<div class="hist-row" data-date="${s.date}">
+      <div class="hist-pct" style="background:${cl}1A;color:${cl}">${pct}%</div>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:14px">${fmtDate(s.date)}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">${s.present}/${s.total} presentes</div>
+      </div>
+      <div class="hist-bar"><div class="hist-bar-fill" style="width:${pct}%;background:${cl}"></div></div>
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`;
+  }).join('');
+  $('hist-list').querySelectorAll('.hist-row').forEach(row=>{
+    row.addEventListener('click',()=>{ $('att-date').value=row.dataset.date; showView('course'); renderAtt(); });
+  });
+}
+$('back-hist').addEventListener('click',  ()=>showView('course'));
+$('back-print').addEventListener('click', ()=>showView('course'));
+
+/* ══════════════════════════════════════════════
+   PRINT
+══════════════════════════════════════════════ */
+function showPrint() {
+  const c=activeCourse(); if(!c) return;
+  const sess=Object.entries(records).filter(([k])=>k.startsWith(c.id+'__'))
+    .map(([k,r])=>({date:k.split('__')[1],rec:r})).sort((a,b)=>a.date.localeCompare(b.date));
+
+  $('pr-name').textContent=c.name; $('pr-code').textContent=c.code;
+  $('pr-total').textContent=c.students.length; $('pr-sessions').textContent=sess.length;
+  $('pr-date').textContent=new Date().toLocaleDateString('es-ES',{year:'numeric',month:'long',day:'numeric'});
+
+  const sc=v=>v==='P'?'#059669':v==='A'?'#DC2626':v==='T'?'#D97706':'#bbb';
+  const sl=v=>v==='P'?'P':v==='A'?'A':v==='T'?'T':'—';
+
+  if(!sess.length){ $('pr-tbl-w').innerHTML='<p style="text-align:center;color:#999;padding:40px 0">Sin sesiones.</p>'; showView('print'); return; }
+
+  let h='<table class="pr-tbl"><thead><tr>';
+  h+=`<th style="text-align:left;padding:8px 12px;min-width:160px">Alumno</th>`;
+  sess.forEach(s=>{ h+=`<th>${fmtShort(s.date)}</th>`; });
+  h+='<th style="background:#e8e8e8">Pres.</th><th style="background:#e8e8e8">%</th></tr></thead><tbody>';
+  c.students.forEach(st=>{
+    const pr=sess.filter(s=>s.rec[st.id]==='P').length;
+    const pct=sess.length?Math.round(pr/sess.length*100):0;
+    const pc=pct>=80?'#059669':pct>=50?'#D97706':'#DC2626';
+    h+=`<tr><td class="nm-col">${esc(st.name)}</td>`;
+    sess.forEach(s=>{ h+=`<td style="color:${sc(s.rec[st.id])};font-weight:700">${sl(s.rec[st.id])}</td>`; });
+    h+=`<td style="font-weight:600">${pr}</td><td style="font-weight:700;color:${pc}">${pct}%</td></tr>`;
+  });
+  h+='</tbody></table>';
+  $('pr-tbl-w').innerHTML=h;
+  showView('print');
+}
+
+/* ══════════════════════════════════════════════
+   STATS
+══════════════════════════════════════════════ */
+function calcStats(cid) {
+  const ents=Object.entries(records).filter(([k])=>k.startsWith(cid+'__'));
+  let tot=0,pres=0;
+  ents.forEach(([,r])=>Object.values(r).forEach(v=>{tot++;if(v==='P')pres++;}));
+  return {sessions:ents.length,total:tot,present:pres,pct:tot?Math.round(pres/tot*100):0};
+}
+
+/* ══════════════════════════════════════════════
+   PWA
+══════════════════════════════════════════════ */
+if('serviceWorker' in navigator) {
+  const sw=`const C='lista-v3';
+self.addEventListener('install',()=>self.skipWaiting());
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))));self.clients.claim();});
+self.addEventListener('fetch',e=>{
+  if(e.request.method!=='GET') return;
+  if(/firestore|googleapis\.com\/identitytoolkit/.test(e.request.url)) return;
+  e.respondWith(caches.open(C).then(c=>c.match(e.request).then(r=>r||fetch(e.request).then(res=>{c.put(e.request,res.clone());return res;}))));
+});`;
+  const blob=new Blob([sw],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+</script>
+</body>
+</html>
