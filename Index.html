@@ -184,8 +184,8 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);cursor:poi
 ══════════════════════════════════════════════════ */
 .c-layout{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
 @media(max-width:1199px){.c-layout{grid-template-columns:1fr}}
-.s-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-@media(max-width:767px){.s-grid{grid-template-columns:repeat(2,1fr)}}
+.s-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:767px){.s-grid{grid-template-columns:repeat(3,1fr)}}
 .s-card{padding:14px 10px;text-align:center}
 .s-num{font-family:var(--font-h);font-weight:800;font-size:28px}
 .s-lbl{font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--muted);margin-top:3px}
@@ -201,6 +201,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);cursor:poi
 .att-b.p{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent);transform:scale(1.05)}
 .att-b.t{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn);transform:scale(1.05)}
 .att-b.a{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 18%,transparent);color:var(--danger);transform:scale(1.05)}
+.att-b.e{border-color:#A78BFA;background:color-mix(in srgb,#A78BFA 18%,transparent);color:#A78BFA;transform:scale(1.05)}
 .prog-bar{height:4px;background:var(--border);border-radius:99px;margin-top:5px;overflow:hidden}
 .prog-fill{height:100%;border-radius:99px;transition:width .4s}
 
@@ -478,9 +479,10 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);cursor:poi
               </div>
             </div>
             <div>
-              <div class="s-grid" id="s-grid" style="margin-bottom:12px">
+              <div class="s-grid" id="s-grid" style="margin-bottom:12px;grid-template-columns:repeat(3,1fr)">
                 <div class="card s-card"><div class="s-num" id="s-p" style="color:var(--accent)">0</div><div class="s-lbl">PRESENTES</div></div>
                 <div class="card s-card"><div class="s-num" id="s-t" style="color:var(--warn)">0</div><div class="s-lbl">TARDANZAS</div></div>
+                <div class="card s-card"><div class="s-num" id="s-e" style="color:#A78BFA">0</div><div class="s-lbl">EXCUSAS</div></div>
                 <div class="card s-card"><div class="s-num" id="s-a" style="color:var(--danger)">0</div><div class="s-lbl">AUSENTES</div></div>
                 <div class="card s-card"><div class="s-num" id="s-n" style="color:var(--muted)">0</div><div class="s-lbl">PENDIENTES</div></div>
               </div>
@@ -586,6 +588,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);cursor:poi
                 <span><b style="color:#059669">P</b> Presente</span>
                 <span><b style="color:#DC2626">A</b> Ausente</span>
                 <span><b style="color:#D97706">T</b> Tardanza</span>
+                <span><b style="color:#7C3AED">E</b> Excusa</span>
                 <span><b style="color:#bbb">—</b> Sin registro</span>
               </div>
             </div>
@@ -941,11 +944,12 @@ function renderAtt() {
   const sts=c.students||[];
   const P=sts.filter(s=>att[s.id]==='P').length;
   const T=sts.filter(s=>att[s.id]==='T').length;
+  const E=sts.filter(s=>att[s.id]==='E').length;
   const A=sts.filter(s=>att[s.id]==='A').length;
-  const N=sts.length-P-T-A;
-  $('s-p').textContent=P; $('s-t').textContent=T; $('s-a').textContent=A; $('s-n').textContent=N;
+  const N=sts.length-P-T-E-A;
+  $('s-p').textContent=P; $('s-t').textContent=T; $('s-e').textContent=E; $('s-a').textContent=A; $('s-n').textContent=N;
 
-  $('prog-bars').innerHTML=[['Presentes',P,'var(--accent)'],['Tardanzas',T,'var(--warn)'],['Ausentes',A,'var(--danger)']].map(([lbl,val,clr])=>{
+  $('prog-bars').innerHTML=[['Presentes',P,'var(--accent)'],['Tardanzas',T,'var(--warn)'],['Excusas',E,'#A78BFA'],['Ausentes',A,'var(--danger)']].map(([lbl,val,clr])=>{
     const pct=sts.length?Math.round(val/sts.length*100):0;
     return `<div style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;margin-bottom:5px">
@@ -968,9 +972,10 @@ function renderAtt() {
       <div class="att-av" style="background:${c.color}22;color:${c.color}">${ini}</div>
       <div class="att-nm">${esc(s.name)}</div>
       <div class="att-bs">
-        <button class="att-b ${st==='P'?'p':''}" data-sid="${s.id}" data-st="P">P</button>
-        <button class="att-b ${st==='T'?'t':''}" data-sid="${s.id}" data-st="T">T</button>
-        <button class="att-b ${st==='A'?'a':''}" data-sid="${s.id}" data-st="A">A</button>
+        <button class="att-b ${st==='P'?'p':''}" data-sid="${s.id}" data-st="P" title="Presente">P</button>
+        <button class="att-b ${st==='T'?'t':''}" data-sid="${s.id}" data-st="T" title="Tardanza">T</button>
+        <button class="att-b ${st==='E'?'e':''}" data-sid="${s.id}" data-st="E" title="Excusa">E</button>
+        <button class="att-b ${st==='A'?'a':''}" data-sid="${s.id}" data-st="A" title="Ausente">A</button>
       </div>
     </div>`;
   }).join('');
@@ -1115,7 +1120,7 @@ function showHistory() {
 function renderHist() {
   const c=activeCourse(); if(!c) return;
   const sess=Object.entries(records).filter(([k])=>k.startsWith(c.id+'__'))
-    .map(([k,r])=>({date:k.split('__')[1],present:Object.values(r).filter(v=>v==='P').length,total:c.students.length}))
+    .map(([k,r])=>({date:k.split('__')[1],present:Object.values(r).filter(v=>v==='P').length,excuse:Object.values(r).filter(v=>v==='E').length,total:c.students.length}))
     .sort((a,b)=>b.date.localeCompare(a.date));
   if(!sess.length){
     $('hist-list').innerHTML='<div style="padding:60px 24px;text-align:center"><div style="font-size:40px;margin-bottom:12px">📅</div><p style="color:var(--muted)">No hay sesiones registradas</p></div>';
@@ -1128,7 +1133,7 @@ function renderHist() {
       <div class="hist-pct" style="background:${cl}1A;color:${cl}">${pct}%</div>
       <div style="flex:1">
         <div style="font-weight:600;font-size:14px">${fmtDate(s.date)}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px">${s.present}/${s.total} presentes</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">${s.present}/${s.total} presentes · ${s.excuse} con excusa</div>
       </div>
       <div class="hist-bar"><div class="hist-bar-fill" style="width:${pct}%;background:${cl}"></div></div>
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
@@ -1153,8 +1158,8 @@ function showPrint() {
   $('pr-total').textContent=c.students.length; $('pr-sessions').textContent=sess.length;
   $('pr-date').textContent=new Date().toLocaleDateString('es-ES',{year:'numeric',month:'long',day:'numeric'});
 
-  const sc=v=>v==='P'?'#059669':v==='A'?'#DC2626':v==='T'?'#D97706':'#bbb';
-  const sl=v=>v==='P'?'P':v==='A'?'A':v==='T'?'T':'—';
+  const sc=v=>v==='P'?'#059669':v==='A'?'#DC2626':v==='T'?'#D97706':v==='E'?'#7C3AED':'#bbb';
+  const sl=v=>v==='P'?'P':v==='A'?'A':v==='T'?'T':v==='E'?'E':'—';
 
   if(!sess.length){ $('pr-tbl-w').innerHTML='<p style="text-align:center;color:#999;padding:40px 0">Sin sesiones.</p>'; showView('print'); return; }
 
@@ -1203,3 +1208,4 @@ self.addEventListener('fetch',e=>{
 </script>
 </body>
 </html>
+
