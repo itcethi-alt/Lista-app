@@ -340,8 +340,9 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);cursor:poi
   @page { size: landscape; margin: 10mm 8mm; }
   html,body{height:auto!important;overflow:visible!important}
   body *{visibility:hidden!important}
-  #print-zone,#print-zone *{visibility:visible!important}
-  #print-zone{position:absolute!important;inset:0!important;padding:0!important;margin:0!important;width:100%!important}
+  #print-area{display:block!important}
+  #print-area,#print-area *{visibility:visible!important}
+  #print-area{display:block!important;position:fixed!important;inset:0!important;padding:0!important;margin:0!important;width:100%!important;background:#fff!important;z-index:99999!important}
   .pr-wrap{padding:0!important;margin:0!important;max-width:100%!important;width:100%!important}
   .pr-card{border-radius:0!important;border:none!important;box-shadow:none!important;width:100%!important}
   .pr-hdr{padding:8px 12px!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -540,9 +541,15 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);cursor:poi
           <div class="c-layout">
             <div>
               <div class="card cp" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;margin-bottom:12px">
-                <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:160px">
-                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:160px">
+                  <button class="ib" id="date-prev" title="Día anterior" style="width:30px;height:30px;flex-shrink:0">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                  </button>
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                   <input type="date" id="att-date" class="inp" style="flex:1;border:none;background:transparent;padding:4px 6px;font-size:14px;font-weight:500"/>
+                  <button class="ib" id="date-next" title="Día siguiente" style="width:30px;height:30px;flex-shrink:0">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                  </button>
                 </div>
                 <div style="display:flex;gap:6px">
                   <button class="btn btn-s btn-sm" id="mark-all-p">✓ Todos presentes</button>
@@ -633,48 +640,8 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);cursor:poi
           </div>
         </div>
 
-        <!-- PRINT -->
-        <div id="view-print" class="view fade-up">
-          <div class="ph">
-            <div style="display:flex;align-items:center;gap:12px">
-              <button class="ib" id="back-print">
-                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-              </button>
-              <h2 class="h2">Vista previa</h2>
-            </div>
-            <button class="btn btn-p btn-sm" onclick="window.print()">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-              Imprimir
-            </button>
-          </div>
-          <div class="pr-wrap" id="print-zone">
-            <div class="pr-card">
-              <div class="pr-hdr">
-                <div>
-                  <div style="font-family:var(--font-h);font-weight:800;font-size:22px;color:#111">REGISTRO DE ASISTENCIA</div>
-                  <div id="pr-name" style="font-size:16px;font-weight:700;color:#333;margin-top:4px"></div>
-                  <div id="pr-code" style="color:#666;font-size:13px"></div>
-                  <div id="pr-teacher" style="color:#555;font-size:13px;margin-top:2px;display:none"></div>
-                </div>
-                <div style="text-align:right;font-size:12px;color:#888;line-height:1.8">
-                  <div>Total alumnos: <b id="pr-total"></b></div>
-                  <div>Sesiones: <b id="pr-sessions"></b></div>
-                  <div id="pr-date"></div>
-                </div>
-              </div>
-              <div id="pr-tbl-w" class="pr-tbl-wrap" style="overflow-x:auto;padding:12px 16px">
-                <p style="text-align:center;color:#999;padding:40px 0">Sin datos</p>
-              </div>
-              <div class="pr-leg">
-                <span style="font-weight:700">Leyenda:</span>
-                <span><b style="color:#059669">P</b> Presente</span>
-                <span><b style="color:#DC2626">A</b> Ausente</span>
-                <span><b style="color:#7C3AED">E</b> Excusa</span>
-                <span><b style="color:#bbb">—</b> Sin registro</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- PRINT (view kept for back-print listener) -->
+        <div id="view-print" class="view fade-up" style="display:none"></div>
 
       </div><!-- /page -->
 
@@ -995,7 +962,8 @@ function renderHome() {
           ${s.sessions>0?`<span class="pct-b" style="color:${pc};background:${pc}20">${s.pct}%</span>`:''}
         </div>
         <div style="font-family:var(--font-h);font-weight:700;font-size:16px;margin-bottom:3px;line-height:1.3">${esc(c.name)}</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${esc(c.code)}</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:2px">${esc(c.code)}</div>
+        ${c.teacher?`<div style="font-size:11px;color:var(--sub);margin-bottom:10px;display:flex;align-items:center;gap:4px"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>${esc(c.teacher)}</div>`:'<div style="margin-bottom:10px"></div>'}
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <span class="pill" style="background:var(--accent-bg);color:var(--accent)">${c.students?.length||0} alumnos</span>
           ${s.sessions>0?`<span class="pill" style="background:var(--border);color:var(--muted)">${s.sessions} sesiones</span>`:''}
@@ -1108,8 +1076,38 @@ async function markAll(status) {
 }
 
 $('att-date').addEventListener('change', renderAtt);
-$('mark-all-p').addEventListener('click', ()=>markAll('P'));
-$('mark-all-a').addEventListener('click', ()=>markAll('A'));
+
+// Date navigation arrows
+function shiftDate(days) {
+  const d = new Date(($('att-date').value || todayStr()) + 'T12:00:00');
+  d.setDate(d.getDate() + days);
+  $('att-date').value = d.toISOString().split('T')[0];
+  renderAtt();
+}
+$('date-prev').addEventListener('click', ()=>shiftDate(-1));
+$('date-next').addEventListener('click', ()=>shiftDate(1));
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  if(e.key==='Escape') {
+    if(curView==='course'||curView==='history'||curView==='print'||curView==='edit') {
+      if(activeId) showView('course'); else goHome();
+    }
+  }
+  if(curView==='course') {
+    if(e.key==='ArrowLeft')  shiftDate(-1);
+    if(e.key==='ArrowRight') shiftDate(1);
+  }
+});
+$('mark-all-p').addEventListener('click', ()=>{
+  const c=activeCourse(); if(!c) return;
+  confirm('¿Marcar todos como presentes?',`Se registrará a los ${c.students.length} alumnos como Presentes en esta sesión.`,()=>markAll('P'));
+});
+$('mark-all-a').addEventListener('click', ()=>{
+  const c=activeCourse(); if(!c) return;
+  confirm('¿Marcar todos como ausentes?',`Se registrará a los ${c.students.length} alumnos como Ausentes en esta sesión.`,()=>markAll('A'));
+});
 $('btn-hist').addEventListener('click',   showHistory);
 $('btn-edit-c').addEventListener('click', ()=>showEditCourse(activeId));
 $('btn-print').addEventListener('click',  showPrint);
@@ -1285,8 +1283,11 @@ function showPrint() {
   const sess=Object.entries(records).filter(([k])=>k.startsWith(c.id+'__'))
     .map(([k,r])=>({date:k.split('__')[1],rec:r})).sort((a,b)=>a.date.localeCompare(b.date));
 
-  $('pr-name').textContent=c.name; $('pr-code').textContent=c.code;
-  $('pr-total').textContent=c.students.length; $('pr-sessions').textContent=sess.length;
+  // Fill the dedicated #print-area (outside app, always in DOM)
+  $('pr-name').textContent=c.name;
+  $('pr-code').textContent=c.code;
+  $('pr-total').textContent=c.students.length;
+  $('pr-sessions').textContent=sess.length;
   $('pr-date').textContent=new Date().toLocaleDateString('es-ES',{year:'numeric',month:'long',day:'numeric'});
   const prTeacher=$('pr-teacher');
   if(prTeacher){ prTeacher.textContent=c.teacher?`Profesor: ${c.teacher}`:''; prTeacher.style.display=c.teacher?'block':'none'; }
@@ -1294,23 +1295,25 @@ function showPrint() {
   const sc=v=>v==='P'?'#059669':v==='A'?'#DC2626':v==='E'?'#7C3AED':'#bbb';
   const sl=v=>v==='P'?'P':v==='A'?'A':v==='E'?'E':'—';
 
-  if(!sess.length){ $('pr-tbl-w').innerHTML='<p style="text-align:center;color:#999;padding:40px 0">Sin sesiones.</p>'; showView('print'); return; }
+  const tblW=$('pr-tbl-w');
+  if(!sess.length){ tblW.innerHTML='<p style="text-align:center;color:#999;padding:40px 0">Sin sesiones registradas.</p>'; window.print(); return; }
 
   let h='<table class="pr-tbl"><thead><tr>';
-  h+=`<th style="text-align:left;padding:8px 12px;min-width:160px">Alumno</th>`;
-  sess.forEach(s=>{ h+=`<th>${fmtShort(s.date)}</th>`; });
-  h+='<th style="background:#e8e8e8">Pres.</th><th style="background:#e8e8e8">%</th></tr></thead><tbody>';
+  h+=`<th style="text-align:left;padding:6px 10px;min-width:140px">Alumno</th>`;
+  sess.forEach(s=>{ h+=`<th style="white-space:nowrap">${fmtShort(s.date)}</th>`; });
+  h+='<th style="background:#ddd;white-space:nowrap">Pres.</th><th style="background:#ddd;white-space:nowrap">%</th></tr></thead><tbody>';
   c.students.forEach(st=>{
     const pr=sess.filter(s=>s.rec[st.id]==='P').length;
     const pct=sess.length?Math.round(pr/sess.length*100):0;
     const pc=pct>=80?'#059669':pct>=50?'#D97706':'#DC2626';
     h+=`<tr><td class="nm-col">${esc(st.name)}</td>`;
-    sess.forEach(s=>{ h+=`<td style="color:${sc(s.rec[st.id])};font-weight:700">${sl(s.rec[st.id])}</td>`; });
-    h+=`<td style="font-weight:600">${pr}</td><td style="font-weight:700;color:${pc}">${pct}%</td></tr>`;
+    sess.forEach(s=>{ h+=`<td style="color:${sc(s.rec[st.id])};font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact">${sl(s.rec[st.id])}</td>`; });
+    h+=`<td style="font-weight:600">${pr}</td><td style="font-weight:700;color:${pc};-webkit-print-color-adjust:exact;print-color-adjust:exact">${pct}%</td></tr>`;
   });
   h+='</tbody></table>';
-  $('pr-tbl-w').innerHTML=h;
-  showView('print');
+  tblW.innerHTML=h;
+  // Trigger print directly — no intermediate view needed
+  window.print();
 }
 
 /* ══════════════════════════════════════════════
@@ -1339,5 +1342,36 @@ self.addEventListener('fetch',e=>{
   navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
 }
 </script>
+
+<!-- PRINT AREA — lives outside app, always in DOM -->
+<div id="print-area" style="display:none">
+  <div class="pr-wrap">
+    <div class="pr-card">
+      <div class="pr-hdr">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#111">REGISTRO DE ASISTENCIA</div>
+          <div id="pr-name" style="font-size:15px;font-weight:700;color:#333;margin-top:3px"></div>
+          <div id="pr-code" style="color:#666;font-size:12px"></div>
+          <div id="pr-teacher" style="color:#555;font-size:12px;margin-top:2px;display:none"></div>
+        </div>
+        <div style="text-align:right;font-size:11px;color:#888;line-height:1.9">
+          <div>Total alumnos: <b id="pr-total"></b></div>
+          <div>Sesiones: <b id="pr-sessions"></b></div>
+          <div id="pr-date"></div>
+        </div>
+      </div>
+      <div id="pr-tbl-w" class="pr-tbl-wrap" style="overflow-x:auto;padding:10px 14px">
+        <p style="text-align:center;color:#999;padding:40px 0">Sin datos</p>
+      </div>
+      <div class="pr-leg">
+        <span style="font-weight:700">Leyenda:</span>
+        <span><b style="color:#059669">P</b> Presente</span>
+        <span><b style="color:#DC2626">A</b> Ausente</span>
+        <span><b style="color:#7C3AED">E</b> Excusa</span>
+        <span><b style="color:#bbb">—</b> Sin registro</span>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
