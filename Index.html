@@ -271,14 +271,13 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);cursor:poi
 ══════════════════════════════════════════════════ */
 .pr-wrap{max-width:960px;margin:0 auto;padding:28px 20px 60px}
 .pr-card{background:#fff;color:#000;border-radius:16px;border:1px solid var(--border);overflow:hidden}
-.pr-hdr{padding:22px 28px;border-bottom:2px solid #111;background:#f9f9f9;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px}
-.pr-tbl{width:100%;border-collapse:collapse;font-size:12px}
-.pr-tbl th,.pr-tbl td{border:1px solid #ddd;padding:7px 6px}
-.pr-tbl th{background:#f0f0f0;font-weight:700}
-.pr-tbl td{text-align:center}
-.pr-tbl .nm-col{text-align:left;padding:7px 12px;font-weight:500}
-.pr-tbl tr:nth-child(even) td{background:#fafafa}
-.pr-leg{padding:14px 28px;border-top:1px solid #eee;display:flex;gap:20px;font-size:11px;color:#666;flex-wrap:wrap}
+.pr-hdr{padding:18px 22px;border-bottom:2px solid #111;background:#f5f5f5;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px}
+.pr-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.pr-tbl th,.pr-tbl td{border:1px solid #ccc;padding:5px 4px;text-align:center}
+.pr-tbl th{background:#e8e8e8;font-weight:700;font-size:10px}
+.pr-tbl .nm-col{text-align:left;padding:5px 10px;font-weight:500}
+.pr-tbl tr:nth-child(even) td{background:#f7f7f7}
+.pr-leg{padding:10px 22px;border-top:1px solid #eee;display:flex;gap:16px;font-size:10px;color:#555;flex-wrap:wrap}
 
 /* ══════════════════════════════════════════════════
    AUTH
@@ -337,10 +336,24 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);cursor:poi
 .ph-acts{display:flex;gap:8px;flex-wrap:wrap}
 .divider{height:1px;background:var(--border);margin:16px 0}
 
-@media print{
+@media print {
+  @page { size: landscape; margin: 10mm 8mm; }
+  html,body{height:auto!important;overflow:visible!important}
   body *{visibility:hidden!important}
   #print-zone,#print-zone *{visibility:visible!important}
-  #print-zone{position:fixed;left:0;top:0;width:100%;padding:24px;background:#fff}
+  #print-zone{position:absolute!important;inset:0!important;padding:0!important;margin:0!important;width:100%!important}
+  .pr-wrap{padding:0!important;margin:0!important;max-width:100%!important;width:100%!important}
+  .pr-card{border-radius:0!important;border:none!important;box-shadow:none!important;width:100%!important}
+  .pr-hdr{padding:8px 12px!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pr-tbl{font-size:8.5px!important;width:100%!important;table-layout:auto}
+  .pr-tbl th,.pr-tbl td{padding:3px 2px!important;border:0.5px solid #aaa!important}
+  .pr-tbl th{background:#e0e0e0!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;white-space:nowrap}
+  .pr-tbl .nm-col{text-align:left!important;padding:3px 7px!important;white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+  .pr-tbl tr:nth-child(even) td{background:#f5f5f5!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pr-tbl td[style]{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pr-tbl tbody tr{page-break-inside:avoid}
+  .pr-leg{font-size:8px!important;padding:5px 12px!important;gap:10px!important}
+  .pr-tbl-wrap{overflow:visible!important;padding:6px 8px!important}
 }
 </style>
 </head>
@@ -649,7 +662,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);cursor:poi
                   <div id="pr-date"></div>
                 </div>
               </div>
-              <div style="overflow-x:auto;padding:16px" id="pr-tbl-w">
+              <div id="pr-tbl-w" class="pr-tbl-wrap" style="overflow-x:auto;padding:12px 16px">
                 <p style="text-align:center;color:#999;padding:40px 0">Sin datos</p>
               </div>
               <div class="pr-leg">
