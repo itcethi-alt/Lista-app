@@ -267,17 +267,64 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);cursor:poi
 .st-name-inp{flex:1;font-weight:500;font-size:14px;padding:5px 8px;border-radius:8px;border:1.5px solid var(--accent);background:var(--inp);color:var(--text);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent);transition:box-shadow .3s var(--ease-out)}
 
 /* ══════════════════════════════════════════════════
-   PRINT
+   PRINT — screen preview (not used, print-area is off-screen)
 ══════════════════════════════════════════════════ */
-.pr-wrap{max-width:960px;margin:0 auto;padding:28px 20px 60px}
-.pr-card{background:#fff;color:#000;border-radius:16px;border:1px solid var(--border);overflow:hidden}
-.pr-hdr{padding:18px 22px;border-bottom:2px solid #111;background:#f5f5f5;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px}
-.pr-tbl{width:100%;border-collapse:collapse;font-size:11px}
-.pr-tbl th,.pr-tbl td{border:1px solid #ccc;padding:5px 4px;text-align:center}
-.pr-tbl th{background:#e8e8e8;font-weight:700;font-size:10px}
-.pr-tbl .nm-col{text-align:left;padding:5px 10px;font-weight:500}
-.pr-tbl tr:nth-child(even) td{background:#f7f7f7}
-.pr-leg{padding:10px 22px;border-top:1px solid #eee;display:flex;gap:16px;font-size:10px;color:#555;flex-wrap:wrap}
+.pr-wrap{max-width:760px;margin:0 auto}
+.pr-card{background:#fff;color:#000;overflow:hidden;font-family:'Times New Roman',serif}
+
+/* Institutional header */
+.pr-inst{text-align:center;padding:10px 20px 8px;border-bottom:2px solid #000}
+.pr-inst-name{font-size:15px;font-weight:bold;text-transform:uppercase;letter-spacing:.04em}
+.pr-inst-addr{font-size:9px;color:#444;margin-top:2px}
+.pr-inst-title{font-size:13px;font-weight:bold;text-transform:uppercase;letter-spacing:.12em;margin-top:8px;margin-bottom:2px}
+.pr-inst-range{font-size:9px;color:#555}
+
+/* Info rows below header */
+.pr-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid #000}
+.pr-info-row{display:flex;align-items:baseline;gap:4px;padding:3px 14px;font-size:9px;border-bottom:1px solid #eee}
+.pr-info-row:last-child{border-bottom:none}
+.pr-info-lbl{font-weight:bold;white-space:nowrap;min-width:80px}
+.pr-info-val{flex:1;border-bottom:1px dotted #999;padding-bottom:1px}
+
+/* Table */
+.pr-tbl{width:100%;border-collapse:collapse;font-size:9px;margin:0}
+.pr-tbl th{background:#e8e8e8;font-weight:bold;border:1px solid #555;padding:4px 5px;text-align:center;font-size:8.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.pr-tbl td{border:1px solid #aaa;padding:3px 5px;text-align:center}
+.pr-tbl .nm-col{text-align:left;font-weight:500;white-space:nowrap;padding:3px 8px}
+.pr-tbl tr:nth-child(even) td{background:#f4f4f4;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.pr-tbl .tot-col{background:#e0e0e0;font-weight:bold;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+/* Footer */
+.pr-foot{padding:6px 14px;border-top:2px solid #000;display:flex;justify-content:space-between;align-items:flex-end;font-size:8px;color:#333}
+.pr-sign{border-top:1px solid #000;padding-top:2px;text-align:center;font-size:8px;min-width:140px}
+.pr-leg-inline{display:flex;gap:12px;font-size:8px;color:#444}
+.pr-count-row{padding:3px 14px;font-size:9px;font-weight:bold;border-top:1px solid #ccc;text-align:right}
+
+@media print {
+  @page { size: portrait; margin: 12mm 10mm; }
+  html,body{height:auto!important;overflow:visible!important}
+  body *{visibility:hidden!important}
+  #print-area{display:block!important}
+  #print-area,#print-area *{visibility:visible!important}
+  #print-area{
+    display:block!important;position:fixed!important;inset:0!important;
+    padding:0!important;margin:0!important;width:100%!important;
+    background:#fff!important;z-index:99999!important
+  }
+  .pr-wrap{padding:0!important;margin:0!important;max-width:100%!important;width:100%!important}
+  .pr-card{width:100%!important;font-family:'Times New Roman',serif!important}
+  .pr-inst{padding:8px 14px 6px!important}
+  .pr-inst-name{font-size:13px!important}
+  .pr-tbl{font-size:8px!important;width:100%!important}
+  .pr-tbl th,.pr-tbl td{padding:2px 3px!important;border:0.75px solid #555!important}
+  .pr-tbl th{background:#ddd!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pr-tbl tr:nth-child(even) td{background:#f2f2f2!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pr-tbl .tot-col{background:#d8d8d8!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pr-tbl td[data-v]{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pr-tbl-wrap{overflow:visible!important;padding:0!important}
+  .pr-tbl tbody tr{page-break-inside:avoid}
+  .pr-foot{padding:5px 12px!important}
+}
 
 /* ══════════════════════════════════════════════════
    AUTH
@@ -533,6 +580,9 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);cursor:poi
               <button class="ib" id="btn-edit-c" title="Editar">
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
               </button>
+              <button class="ib" id="btn-stats" title="Estadísticas de alumnos">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              </button>
               <button class="ib accent" id="btn-print" title="Imprimir">
                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
               </button>
@@ -554,7 +604,15 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);cursor:poi
                 <div style="display:flex;gap:6px">
                   <button class="btn btn-s btn-sm" id="mark-all-p">✓ Todos presentes</button>
                   <button class="btn btn-d btn-sm" id="mark-all-a">✗ Todos ausentes</button>
+                  <button class="btn btn-sm" id="quick-roll-btn" title="Pase de lista rápido" style="background:var(--card-alt);border:1.5px solid var(--border);color:var(--text)">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;margin-right:4px;vertical-align:middle"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Pase rápido
+                  </button>
                 </div>
+              </div>
+              <div class="search-wrap">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input id="att-search" type="search" placeholder="Buscar alumno…" autocomplete="off"/>
               </div>
               <div class="card" id="att-list">
                 <div style="padding:40px;text-align:center;color:var(--muted)">Cargando...</div>
@@ -640,6 +698,37 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);cursor:poi
           </div>
         </div>
 
+
+        <!-- STUDENT STATS VIEW -->
+        <div id="view-stats" class="view fade-up">
+          <div class="ph">
+            <div style="display:flex;align-items:center;gap:12px">
+              <button class="ib" id="back-stats">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <div>
+                <h2 class="h2" id="stats-title">Estadísticas</h2>
+                <p style="font-size:12px;color:var(--muted);margin-top:2px" id="stats-sub"></p>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-s btn-sm" id="stats-export-csv">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;margin-right:4px;vertical-align:middle"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV
+              </button>
+            </div>
+          </div>
+          <div id="stats-alert-zone"></div>
+          <div class="stat-filter" id="stat-filters">
+            <button class="stat-f-btn active" data-filter="all">Todos</button>
+            <button class="stat-f-btn" data-filter="risk">En riesgo (&lt;75%)</button>
+            <button class="stat-f-btn" data-filter="good">Buena asistencia (≥80%)</button>
+          </div>
+          <div class="card" id="stats-list">
+            <div style="padding:40px;text-align:center;color:var(--muted)">Cargando...</div>
+          </div>
+        </div>
+
         <!-- PRINT (view kept for back-print listener) -->
         <div id="view-print" class="view fade-up" style="display:none"></div>
 
@@ -654,6 +743,10 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);cursor:poi
           <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           LISTA
         </button>
+        <button class="bn-btn" id="bn-stats" style="display:none">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          ALUMNOS
+        </button>
         <button class="bn-btn" id="bn-hist" style="display:none">
           <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           HISTORIAL
@@ -662,6 +755,33 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);cursor:poi
     </div><!-- /main -->
 
   </div><!-- /app-inner -->
+
+<!-- QUICK ROLL MODAL -->
+<div id="qr-modal">
+  <div class="qr-card">
+    <div class="qr-top">
+      <span style="font-family:var(--font-h);font-weight:800;font-size:15px">Pase rápido</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="qr-counter" id="qr-counter">0 / 0</span>
+        <button class="ib" id="qr-close" style="width:32px;height:32px">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="qr-prog"><div class="qr-prog-fill" id="qr-prog-fill" style="width:0%"></div></div>
+    <div id="qr-body" class="qr-body">
+      <div class="qr-num" id="qr-num">ALUMNO 1</div>
+      <div class="qr-name" id="qr-name">—</div>
+      <div class="qr-btns">
+        <button class="qr-btn p" id="qr-p">P</button>
+        <button class="qr-btn e" id="qr-e">E</button>
+        <button class="qr-btn a" id="qr-a">A</button>
+      </div>
+      <div class="qr-skip" id="qr-skip">Saltar (sin registro)</div>
+    </div>
+  </div>
+</div>
+
 </div><!-- /app -->
 
 <div id="toast-w"></div>
@@ -731,6 +851,7 @@ let editId   = null;
 let editSts  = [];
 let editClr  = PALETTE[0];
 let curView  = 'home';
+let attSearchQuery = '';
 let dark     = localStorage.getItem('dark') !== 'false';
 
 let unsubCourses = null;
@@ -897,6 +1018,7 @@ function showView(name) {
   if(name==='home')    $('bn-home')?.classList.add('active');
   if(name==='course')  $('bn-att')?.classList.add('active');
   if(name==='history') $('bn-hist')?.classList.add('active');
+  if(name==='stats')   $('bn-stats')?.classList.add('active');
   document.querySelectorAll('#sidebar .nav-item').forEach(n=>n.classList.remove('active'));
   if(name==='home') $('nav-home')?.classList.add('active');
   closeSidebar();
@@ -943,6 +1065,7 @@ function goHome() {
   activeId=null;
   $('bn-att').style.display='none';
   $('bn-hist').style.display='none';
+  $('bn-stats').style.display='none';
   renderHome();
   showView('home');
 }
@@ -990,6 +1113,7 @@ function selectCourse(id) {
   $('att-date').value = todayStr();
   $('bn-att').style.display='flex';
   $('bn-hist').style.display='flex';
+  $('bn-stats').style.display='flex';
   renderAtt();
   showView('course');
   renderSidebar();
@@ -999,6 +1123,7 @@ const activeCourse = () => courses.find(c=>c.id===activeId);
 function renderAtt() {
   const c=activeCourse(); if(!c) return;
   const date=$('att-date').value||todayStr();
+  attSearchQuery=''; const srch=$('att-search'); if(srch) srch.value='';
   const att=records[`${c.id}__${date}`]||{};
 
   $('ch-dot').style.cssText=`width:10px;height:10px;border-radius:99px;background:${c.color};box-shadow:0 0 8px ${c.color}88;flex-shrink:0`;
@@ -1273,46 +1398,97 @@ function renderHist() {
   });
 }
 $('back-hist').addEventListener('click',  ()=>showView('course'));
-$('back-print').addEventListener('click', ()=>showView('course'));
 
 /* ══════════════════════════════════════════════
    PRINT
 ══════════════════════════════════════════════ */
 function showPrint() {
-  const c=activeCourse(); if(!c) return;
-  const sess=Object.entries(records).filter(([k])=>k.startsWith(c.id+'__'))
-    .map(([k,r])=>({date:k.split('__')[1],rec:r})).sort((a,b)=>a.date.localeCompare(b.date));
+  const c = activeCourse(); if(!c) return;
+  const sess = Object.entries(records)
+    .filter(([k]) => k.startsWith(c.id+'__'))
+    .map(([k,r]) => ({date:k.split('__')[1], rec:r}))
+    .sort((a,b) => a.date.localeCompare(b.date));
 
-  // Fill the dedicated #print-area (outside app, always in DOM)
-  $('pr-name').textContent=c.name;
-  $('pr-code').textContent=c.code;
-  $('pr-total').textContent=c.students.length;
-  $('pr-sessions').textContent=sess.length;
-  $('pr-date').textContent=new Date().toLocaleDateString('es-ES',{year:'numeric',month:'long',day:'numeric'});
-  const prTeacher=$('pr-teacher');
-  if(prTeacher){ prTeacher.textContent=c.teacher?`Profesor: ${c.teacher}`:''; prTeacher.style.display=c.teacher?'block':'none'; }
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('es-ES',{year:'numeric',month:'long',day:'numeric'});
+  const timeStr = now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
 
-  const sc=v=>v==='P'?'#059669':v==='A'?'#DC2626':v==='E'?'#7C3AED':'#bbb';
-  const sl=v=>v==='P'?'P':v==='A'?'A':v==='E'?'E':'—';
+  // ── Header info ──
+  $('pr-name').textContent     = c.name;
+  $('pr-code').textContent     = c.code || '—';
+  $('pr-teacher').textContent  = c.teacher || '—';
+  $('pr-total').textContent    = c.students.length;
+  $('pr-sessions').textContent = sess.length;
+  $('pr-print-date').textContent = `Impreso el ${dateStr} a las ${timeStr}`;
 
-  const tblW=$('pr-tbl-w');
-  if(!sess.length){ tblW.innerHTML='<p style="text-align:center;color:#999;padding:40px 0">Sin sesiones registradas.</p>'; window.print(); return; }
+  // Date range of sessions
+  if(sess.length) {
+    const first = fmtShort(sess[0].date);
+    const last  = fmtShort(sess[sess.length-1].date);
+    $('pr-range').textContent = sess.length===1
+      ? `Sesión: ${first}`
+      : `Desde ${first} hasta ${last}`;
+  } else {
+    $('pr-range').textContent = 'Sin sesiones registradas';
+  }
 
-  let h='<table class="pr-tbl"><thead><tr>';
-  h+=`<th style="text-align:left;padding:6px 10px;min-width:140px">Alumno</th>`;
-  sess.forEach(s=>{ h+=`<th style="white-space:nowrap">${fmtShort(s.date)}</th>`; });
-  h+='<th style="background:#ddd;white-space:nowrap">Pres.</th><th style="background:#ddd;white-space:nowrap">%</th></tr></thead><tbody>';
-  c.students.forEach(st=>{
-    const pr=sess.filter(s=>s.rec[st.id]==='P').length;
-    const pct=sess.length?Math.round(pr/sess.length*100):0;
-    const pc=pct>=80?'#059669':pct>=50?'#D97706':'#DC2626';
-    h+=`<tr><td class="nm-col">${esc(st.name)}</td>`;
-    sess.forEach(s=>{ h+=`<td style="color:${sc(s.rec[st.id])};font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact">${sl(s.rec[st.id])}</td>`; });
-    h+=`<td style="font-weight:600">${pr}</td><td style="font-weight:700;color:${pc};-webkit-print-color-adjust:exact;print-color-adjust:exact">${pct}%</td></tr>`;
+  const sc = v => v==='P'?'#1a7a45':v==='A'?'#b91c1c':v==='E'?'#6d28d9':'#999';
+  const sl = v => v==='P'?'P':v==='A'?'A':v==='E'?'E':'—';
+  const tblW = $('pr-tbl-w');
+
+  if(!sess.length) {
+    tblW.innerHTML = '<p style="text-align:center;padding:20px;font-size:10px">Sin sesiones registradas.</p>';
+    $('pr-count-row').textContent = '';
+    window.print(); return;
+  }
+
+  // ── Build table ──
+  // If many sessions (>15), group by month to save columns
+  // Otherwise show each session as column
+  let h = '<table class="pr-tbl"><thead><tr>';
+
+  // Col 1: # (row number)
+  h += '<th style="width:22px">#</th>';
+  // Col 2: Name
+  h += '<th class="nm-col" style="text-align:left;min-width:130px">Nombre del Estudiante</th>';
+  // Session columns
+  sess.forEach(s => {
+    const d = new Date(s.date+'T12:00:00');
+    const label = d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'});
+    h += `<th style="white-space:nowrap;min-width:28px">${label}</th>`;
   });
-  h+='</tbody></table>';
-  tblW.innerHTML=h;
-  // Trigger print directly — no intermediate view needed
+  // Totals
+  h += '<th class="tot-col" style="min-width:28px">Pres.</th>';
+  h += '<th class="tot-col" style="min-width:28px">Aus.</th>';
+  h += '<th class="tot-col" style="min-width:32px">%</th>';
+  h += '</tr></thead><tbody>';
+
+  c.students.forEach((st, idx) => {
+    const pr  = sess.filter(s=>s.rec[st.id]==='P').length;
+    const aus = sess.filter(s=>s.rec[st.id]==='A').length;
+    const exc = sess.filter(s=>s.rec[st.id]==='E').length;
+    const pct = sess.length ? Math.round(pr/sess.length*100) : 0;
+    const pc  = pct>=80?'#1a7a45':pct>=75?'#92400e':'#b91c1c';
+    const rowBg = idx%2===1 ? 'background:#f4f4f4;' : '';
+
+    h += `<tr>`;
+    h += `<td style="${rowBg}color:#888;font-size:7.5px">${idx+1}</td>`;
+    h += `<td class="nm-col" style="${rowBg}font-size:8.5px">${esc(st.name)}</td>`;
+    sess.forEach(s => {
+      const v = s.rec[st.id];
+      const clr = sc(v);
+      h += `<td data-v="1" style="${rowBg}color:${clr};font-weight:bold;font-size:8px;-webkit-print-color-adjust:exact;print-color-adjust:exact">${sl(v)}</td>`;
+    });
+    h += `<td class="tot-col" style="font-weight:bold">${pr}</td>`;
+    h += `<td class="tot-col" style="font-weight:bold">${aus}</td>`;
+    h += `<td class="tot-col" style="font-weight:bold;color:${pc};-webkit-print-color-adjust:exact;print-color-adjust:exact">${pct}%</td>`;
+    h += '</tr>';
+  });
+  h += '</tbody></table>';
+  tblW.innerHTML = h;
+
+  $('pr-count-row').textContent = `Cantidad de Estudiantes: ${c.students.length}`;
+
   window.print();
 }
 
@@ -1325,6 +1501,236 @@ function calcStats(cid) {
   ents.forEach(([,r])=>Object.values(r).forEach(v=>{tot++;if(v==='P')pres++;}));
   return {sessions:ents.length,total:tot,present:pres,pct:tot?Math.round(pres/tot*100):0};
 }
+
+
+/* ══════════════════════════════════════════════
+   SEARCH FILTER IN ATTENDANCE
+══════════════════════════════════════════════ */
+document.addEventListener('input', e => {
+  if(e.target.id !== 'att-search') return;
+  attSearchQuery = e.target.value.toLowerCase().trim();
+  // Filter rows without full re-render
+  document.querySelectorAll('.att-row').forEach(row => {
+    const nm = row.querySelector('.att-nm')?.textContent.toLowerCase() || '';
+    row.style.display = nm.includes(attSearchQuery) ? '' : 'none';
+  });
+});
+
+/* ══════════════════════════════════════════════
+   STUDENT STATS VIEW
+══════════════════════════════════════════════ */
+let statsFilter = 'all';
+
+function showStats() {
+  const c = activeCourse(); if(!c) return;
+  const sess = Object.entries(records)
+    .filter(([k]) => k.startsWith(c.id + '__'))
+    .map(([k,r]) => ({ date: k.split('__')[1], rec: r }))
+    .sort((a,b) => a.date.localeCompare(b.date));
+
+  $('stats-title').textContent = c.name;
+  $('stats-sub').textContent = `${sess.length} sesiones · ${c.students.length} alumnos`;
+
+  // Alert threshold: students below 75%
+  const AT_RISK_THRESHOLD = 75;
+  const atRisk = sess.length ? c.students.filter(st => {
+    const pres = sess.filter(s => s.rec[st.id] === 'P').length;
+    return Math.round(pres / sess.length * 100) < AT_RISK_THRESHOLD;
+  }) : [];
+
+  const alertZone = $('stats-alert-zone');
+  alertZone.innerHTML = atRisk.length && sess.length ?
+    `<div class="stat-alert">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span><b>${atRisk.length} alumno${atRisk.length>1?'s':''}</b> con asistencia menor al ${AT_RISK_THRESHOLD}%</span>
+    </div>` : '';
+
+  renderStatsList(c, sess);
+  showView('stats');
+}
+
+function renderStatsList(c, sess) {
+  const list = $('stats-list');
+  if(!sess.length) {
+    list.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Sin sesiones registradas aún.</div>';
+    return;
+  }
+
+  let students = c.students.map(st => {
+    const pres = sess.filter(s => s.rec[st.id] === 'P').length;
+    const exc  = sess.filter(s => s.rec[st.id] === 'E').length;
+    const aus  = sess.filter(s => s.rec[st.id] === 'A').length;
+    const pct  = Math.round(pres / sess.length * 100);
+    return { ...st, pres, exc, aus, pct };
+  }).sort((a,b) => b.pct - a.pct);
+
+  if(statsFilter === 'risk')  students = students.filter(s => s.pct < 75);
+  if(statsFilter === 'good')  students = students.filter(s => s.pct >= 80);
+
+  if(!students.length) {
+    list.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted)">Sin alumnos en este filtro.</div>';
+    return;
+  }
+
+  list.innerHTML = students.map((s, i) => {
+    const clr = s.pct >= 80 ? 'var(--accent)' : s.pct >= 75 ? 'var(--warn)' : 'var(--danger)';
+    const ini = s.name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+    return `<div class="stat-row">
+      <span class="stat-rank">${i+1}</span>
+      <div class="stat-av" style="background:${c.color}22;color:${c.color}">${ini}</div>
+      <div class="stat-nm">
+        <div style="font-weight:500">${esc(s.name)}</div>
+        <div style="font-size:11px;color:var(--muted)">${s.pres}P · ${s.exc}E · ${s.aus}A de ${sess.length}</div>
+      </div>
+      <div class="stat-bar-w"><div class="stat-bar-f" style="width:${s.pct}%;background:${clr}"></div></div>
+      <span class="stat-pct" style="color:${clr}">${s.pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+$('back-stats').addEventListener('click', () => showView('course'));
+$('bn-stats')?.addEventListener('click', showStats);
+$('btn-stats').addEventListener('click', showStats);
+
+// Stat filters
+$('stat-filters').addEventListener('click', e => {
+  const btn = e.target.closest('.stat-f-btn');
+  if(!btn) return;
+  statsFilter = btn.dataset.filter;
+  document.querySelectorAll('.stat-f-btn').forEach(b => b.classList.toggle('active', b===btn));
+  const c = activeCourse(); if(!c) return;
+  const sess = Object.entries(records)
+    .filter(([k]) => k.startsWith(c.id + '__'))
+    .map(([k,r]) => ({ date: k.split('__')[1], rec: r }));
+  renderStatsList(c, sess);
+});
+
+/* ══════════════════════════════════════════════
+   EXPORT CSV
+══════════════════════════════════════════════ */
+function exportCSV() {
+  const c = activeCourse(); if(!c) return;
+  const sess = Object.entries(records)
+    .filter(([k]) => k.startsWith(c.id + '__'))
+    .map(([k,r]) => ({ date: k.split('__')[1], rec: r }))
+    .sort((a,b) => a.date.localeCompare(b.date));
+
+  const sl = v => v==='P'?'Presente':v==='A'?'Ausente':v==='E'?'Excusa':'Sin registro';
+  const header = ['Alumno', ...sess.map(s=>s.date), 'Presencias', 'Excusas', 'Ausencias', '% Asistencia'].join(',');
+  const rows = c.students.map(st => {
+    const pres = sess.filter(s=>s.rec[st.id]==='P').length;
+    const exc  = sess.filter(s=>s.rec[st.id]==='E').length;
+    const aus  = sess.filter(s=>s.rec[st.id]==='A').length;
+    const pct  = sess.length ? Math.round(pres/sess.length*100) : 0;
+    const cols = [
+      `"${st.name}"`,
+      ...sess.map(s=>`"${sl(s.rec[st.id])}"`),
+      pres, exc, aus, pct+'%'
+    ];
+    return cols.join(',');
+  });
+
+  const csv = [header, ...rows].join('\n');
+  const blob = new Blob(['\uFEFF'+csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `${c.name}_asistencia.csv`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('CSV descargado ✓', 'ok');
+}
+$('stats-export-csv').addEventListener('click', exportCSV);
+
+/* ══════════════════════════════════════════════
+   QUICK ROLL (pase de lista rápido)
+══════════════════════════════════════════════ */
+let qrStudents = [];
+let qrIdx = 0;
+let qrRec = {};
+
+function openQuickRoll() {
+  const c = activeCourse(); if(!c||!c.students.length) return;
+  const date = $('att-date').value || todayStr();
+  const existing = records[`${c.id}__${date}`] || {};
+  // Start from first student without a record, otherwise from beginning
+  qrStudents = [...c.students];
+  qrRec = { ...existing };
+  qrIdx = 0;
+  // Prefer to start on unregistered students
+  const firstPending = qrStudents.findIndex(s => !qrRec[s.id]);
+  if(firstPending > 0) qrIdx = firstPending;
+  $('qr-modal').classList.add('on');
+  renderQR();
+}
+
+function renderQR() {
+  if(qrIdx >= qrStudents.length) {
+    // Done
+    $('qr-body').innerHTML = `
+      <div class="qr-done">
+        <div class="qr-done-ico">✅</div>
+        <p>Pase completado para todos los alumnos</p>
+        <button class="btn btn-p" id="qr-finish">Guardar y cerrar</button>
+      </div>`;
+    $('qr-prog-fill').style.width = '100%';
+    $('qr-counter').textContent = `${qrStudents.length} / ${qrStudents.length}`;
+    $('qr-finish').addEventListener('click', saveQRAndClose);
+    return;
+  }
+  const st = qrStudents[qrIdx];
+  $('qr-num').textContent = `ALUMNO ${qrIdx + 1}`;
+  $('qr-name').textContent = st.name;
+  $('qr-counter').textContent = `${qrIdx + 1} / ${qrStudents.length}`;
+  $('qr-prog-fill').style.width = `${Math.round(qrIdx / qrStudents.length * 100)}%`;
+
+  // Rebuild buttons (they get replaced in done screen)
+  $('qr-body').innerHTML = `
+    <div class="qr-num" id="qr-num">ALUMNO ${qrIdx+1}</div>
+    <div class="qr-name" id="qr-name">${esc(st.name)}</div>
+    <div class="qr-btns">
+      <button class="qr-btn p" id="qr-p">P</button>
+      <button class="qr-btn e" id="qr-e">E</button>
+      <button class="qr-btn a" id="qr-a">A</button>
+    </div>
+    <div class="qr-skip" id="qr-skip">Saltar (sin registro)</div>
+  `;
+  $('qr-p').onclick = () => qrMark('P');
+  $('qr-e').onclick = () => qrMark('E');
+  $('qr-a').onclick = () => qrMark('A');
+  $('qr-skip').onclick = () => { qrIdx++; renderQR(); };
+}
+
+function qrMark(status) {
+  const st = qrStudents[qrIdx];
+  qrRec[st.id] = status;
+  qrIdx++;
+  renderQR();
+}
+
+async function saveQRAndClose() {
+  const c = activeCourse(); if(!c) return;
+  const date = $('att-date').value || todayStr();
+  const key = `${c.id}__${date}`;
+  records[key] = { ...qrRec };
+  renderAtt();
+  $('qr-modal').classList.remove('on');
+  try {
+    await setDoc(doc(fbDb,'users',currentUser.uid,'records',key), records[key]);
+    toast('Pase guardado ✓','ok');
+  } catch { toast('Error al guardar','err'); }
+}
+
+$('quick-roll-btn').addEventListener('click', openQuickRoll);
+$('qr-close').addEventListener('click', () => $('qr-modal').classList.remove('on'));
+
+// Keyboard: P/E/A keys in quick roll
+document.addEventListener('keydown', e => {
+  if(!$('qr-modal').classList.contains('on')) return;
+  if(e.key.toLowerCase()==='p') qrMark('P');
+  if(e.key.toLowerCase()==='e') qrMark('E');
+  if(e.key.toLowerCase()==='a') qrMark('A');
+  if(e.key===' ') { e.preventDefault(); qrIdx++; renderQR(); }
+});
 
 /* ══════════════════════════════════════════════
    PWA
@@ -1347,29 +1753,57 @@ self.addEventListener('fetch',e=>{
 <div id="print-area" style="display:none">
   <div class="pr-wrap">
     <div class="pr-card">
-      <div class="pr-hdr">
+
+      <!-- ① Institutional header (like FoxPro report) -->
+      <div class="pr-inst">
+        <div class="pr-inst-name" id="pr-inst-name">Lista.app</div>
+        <div class="pr-inst-addr" id="pr-inst-addr"></div>
+        <div style="font-size:8px;color:#666;margin-top:1px" id="pr-print-date"></div>
+        <div class="pr-inst-title">Registro de Asistencia</div>
+        <div class="pr-inst-range" id="pr-range"></div>
+      </div>
+
+      <!-- ② Info grid: profesor / curso / código / sesiones -->
+      <div class="pr-info-grid">
         <div>
-          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#111">REGISTRO DE ASISTENCIA</div>
-          <div id="pr-name" style="font-size:15px;font-weight:700;color:#333;margin-top:3px"></div>
-          <div id="pr-code" style="color:#666;font-size:12px"></div>
-          <div id="pr-teacher" style="color:#555;font-size:12px;margin-top:2px;display:none"></div>
+          <div class="pr-info-row">
+            <span class="pr-info-lbl">Profesor:</span>
+            <span class="pr-info-val" id="pr-teacher"></span>
+          </div>
+          <div class="pr-info-row">
+            <span class="pr-info-lbl">Curso:</span>
+            <span class="pr-info-val" id="pr-name"></span>
+          </div>
         </div>
-        <div style="text-align:right;font-size:11px;color:#888;line-height:1.9">
-          <div>Total alumnos: <b id="pr-total"></b></div>
-          <div>Sesiones: <b id="pr-sessions"></b></div>
-          <div id="pr-date"></div>
+        <div>
+          <div class="pr-info-row">
+            <span class="pr-info-lbl">Código:</span>
+            <span class="pr-info-val" id="pr-code"></span>
+          </div>
+          <div class="pr-info-row">
+            <span class="pr-info-lbl">Total alumnos:</span>
+            <span class="pr-info-val"><b id="pr-total"></b> &nbsp;·&nbsp; <b id="pr-sessions"></b> sesiones</span>
+          </div>
         </div>
       </div>
-      <div id="pr-tbl-w" class="pr-tbl-wrap" style="overflow-x:auto;padding:10px 14px">
-        <p style="text-align:center;color:#999;padding:40px 0">Sin datos</p>
+
+      <!-- ③ Attendance table -->
+      <div id="pr-tbl-w" class="pr-tbl-wrap"></div>
+
+      <!-- ④ Student count row -->
+      <div class="pr-count-row" id="pr-count-row"></div>
+
+      <!-- ⑤ Footer: legend + signature line -->
+      <div class="pr-foot">
+        <div class="pr-leg-inline">
+          <span><b>P</b> = Presente</span>
+          <span><b>A</b> = Ausente</span>
+          <span><b>E</b> = Excusa</span>
+          <span><b>—</b> = Sin registro</span>
+        </div>
+        <div class="pr-sign">Firma Autorizada</div>
       </div>
-      <div class="pr-leg">
-        <span style="font-weight:700">Leyenda:</span>
-        <span><b style="color:#059669">P</b> Presente</span>
-        <span><b style="color:#DC2626">A</b> Ausente</span>
-        <span><b style="color:#7C3AED">E</b> Excusa</span>
-        <span><b style="color:#bbb">—</b> Sin registro</span>
-      </div>
+
     </div>
   </div>
 </div>
